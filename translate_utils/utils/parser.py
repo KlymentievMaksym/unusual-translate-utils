@@ -11,7 +11,7 @@ RE_SCRIPT_POS = re.compile(r'^\s*#\s*(?:.*[/\\])?([^/\\]+\.rpy:\d+)')
 RE_COMMENT_TEXT = re.compile(r'^\s*#\s*(?:(\w+)\s+)?\"(.*)\"$')
 RE_ACTIVE_TEXT = re.compile(r'^\s*(?:(\w+)\s+)?\"(.*)\"$')
 
-RE_OLD = re.compile(r'^\s*old\s+("""|")(.*)\1$', re.DOTALL)
+RE_OLD = re.compile(r'^(\s*)old\s+("""|")(.*)\2$', re.DOTALL)
 RE_NEW = re.compile(r'^\s*new\s+("""|")(.*)\1$', re.DOTALL)
 
 def cleanup_repeats_parse_args():
@@ -154,84 +154,9 @@ class RpyTranslationParser:
         """UI String Logic. Extracts and stores UI translations."""
         old_match = RE_OLD.match(line)
         if old_match:
-            self.temp_old_string = old_match.group(2)
+            self.temp_old_string = old_match.group(3)
         else:
             new_match = RE_NEW.match(line)
             if new_match and self.temp_old_string is not None:
                 self.ui_strings[self.temp_old_string] = new_match.group(2)
                 self.temp_old_string = None
-
-
-
-# def parse_rpy_translations(filepath: str):
-#     """
-#     Parses a Ren'Py translation file and efficiently stores dialogue and UI strings.
-#     """
-#     dialogues: dict[str, DialogueLine] = {} 
-#     ui_strings: dict[str, str] = {}
-
-#     current_mode = None
-#     current_label = None
-    
-#     temp_script_pos = None
-#     temp_character = None
-#     temp_original_text = None
-#     temp_old_string = None
-
-#     with open(filepath, 'r', encoding='utf-8') as file:
-#         for line in file:
-#             line = line.strip('\n')
-#             stripped_line = line.strip()
-
-#             if not stripped_line:
-#                 continue
-
-#             pos_match = re_script_pos.match(line)
-#             if pos_match:
-#                 temp_script_pos = pos_match.group(1)
-#                 continue
-
-#             if re_strings_block.match(line):
-#                 current_mode = 'strings'
-#                 continue
-
-#             label_match = re_label.match(line)
-#             if label_match:
-#                 current_mode = 'dialogue'
-#                 current_label = label_match.group(1) 
-
-#                 temp_character = None
-#                 temp_original_text = None 
-#                 continue
-
-#             if current_mode == 'dialogue':
-#                 if stripped_line.startswith('#'):
-#                     comment_match = re_comment_text.match(line)
-#                     if comment_match:
-#                         temp_character = comment_match.group(1)
-#                         temp_original_text = comment_match.group(2)
-#                 elif not stripped_line.startswith('#') and temp_original_text is not None:
-#                     active_match = re_active_text.match(line)
-#                     if active_match:
-#                         translated_text = active_match.group(2)
-                        
-#                         dialogues[current_label] = DialogueLine(
-#                             script_pos=temp_script_pos,
-#                             character=temp_character,
-#                             original=temp_original_text,
-#                             translated=translated_text
-#                         )
-#                         temp_original_text = None
-
-#             elif current_mode == 'strings':
-#                 old_match = re_old.match(line)
-#                 if old_match:
-#                     temp_old_string = old_match.group(1)
-#                 else:
-#                     new_match = re_new.match(line)
-#                     if new_match and temp_old_string is not None:
-#                         ui_strings[temp_old_string] = new_match.group(1)
-#                         temp_old_string = None 
-
-#     return dialogues, ui_strings
-

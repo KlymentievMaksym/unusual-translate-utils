@@ -47,11 +47,11 @@ def process_cleaned_lines(filepath: str | Path, dialogues: dict[str, DialogueLin
 
                 old_match = RE_OLD.match(line)
                 if old_match:
-                    do_skip_next = True
                     indent = old_match.group(1)  # e.g., "    "
-                    text = old_match.group(2)    # e.g., "If you don't wake up..."
+                    text = old_match.group(3)    # e.g., "If you don't wake up..."
                     
                     if text in text_to_pos:
+                        do_skip_next = True
                         script_pos = ", ".join(text_to_pos[text])
                         output_lines.append(f"{indent}# {script_pos}\n")
                         # output_lines.append(line)
