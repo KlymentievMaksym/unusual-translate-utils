@@ -29,4 +29,4 @@ class CleanupRepeatsArgs(Args):
 @dataclass(slots=True)
 class CheckTranslationProgressArgs(Args):
     filepaths: str | None
-    update_readme: bool
+    update_readme: str | None

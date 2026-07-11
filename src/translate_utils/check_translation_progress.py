@@ -86,8 +86,8 @@ def check_translation_progress():
     print_progress_console(file_stats, global_translated, global_total, dialog_progresses, string_progresses)
     generated_table = generate_progress_markdown(file_stats, global_translated, global_total, dialog_progresses, string_progresses)
     # print(generated_table)
-    if args.update_readme:
-        update_readme_progress(generated_table)
+    if args.update_readme is not None:
+        update_readme_progress(generated_table, Path(args.update_readme))
 
     if global_total > 0:
         global_percent = (global_translated / global_total) * 100

@@ -45,7 +45,8 @@ def check_translation_progress_parse_args():
     )
     parser.add_argument(
         "--update-readme",
-        action="store_true",
+        type=str, 
+        default=None,
         help="Update README"
     )
     return CheckTranslationProgressArgs.from_namespace(parser.parse_args())
