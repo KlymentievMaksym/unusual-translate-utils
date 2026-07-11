@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
-from utils.cleaner import cleanup_old_logs
+from translate_utils.utils.cleaner import cleanup_old_logs
 
 
 sys.stdout.reconfigure(encoding='utf-8')

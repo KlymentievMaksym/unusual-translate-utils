@@ -1,9 +1,11 @@
 from pathlib import Path
 
-from utils.logger import setup_logging
-from utils.parser import check_translation_progress_parse_args, RpyTranslationParser
-from utils.visualize import print_progress_table
-from utils.dataclasses import Progress
+from translate_utils.utils.logger import setup_logging
+from translate_utils.utils.parser import check_translation_progress_parse_args, RpyTranslationParser
+from translate_utils.utils.visualize.terminal import print_progress_console
+from translate_utils.utils.visualize.markdown import generate_progress_markdown
+from translate_utils.utils.update_readme_progress import update_readme_progress
+from translate_utils.utils.dataclasses import Progress
 
 
 LOGGER = setup_logging("TranslationProgress")
@@ -37,7 +39,7 @@ def check_translation_progress():
     args = check_translation_progress_parse_args()
 
     if not args.filepaths:
-        default_dir = Path(__file__).parent.parent / "game" / "tl" / "ukrainian"
+        default_dir = Path(__file__).parents[2] / "game" / "tl" / "ukrainian"
         paths_to_check = [default_dir]
         LOGGER.info(f"No path provided. Defaulting to: {default_dir}")
     else:
@@ -57,21 +59,22 @@ def check_translation_progress():
             rpy_files.append(target_path)
         elif target_path.is_dir():
             rpy_files.extend(target_path.rglob("*.rpy"))
-    # print(rpy_files)
 
     if not rpy_files:
         LOGGER.warning("No .rpy files found to process.")
         return
 
+    rpy_files.sort(key=lambda path: path.name)
     LOGGER.info(f"Found {len(rpy_files)} files. Calculating progress...")
+
     dialog_progresses = []
     string_progresses = []
     for filepath in rpy_files:
         translated, total, dialog_progress, string_progress = calculate_file_progress(filepath, parser)
-        dialog_progresses.append(dialog_progress)
-        string_progresses.append(string_progress)
 
         if total > 0:
+            dialog_progresses.append(dialog_progress)
+            string_progresses.append(string_progress)
             file_stats[filepath.name] = (translated, total)
             global_translated += translated
             global_total += total
@@ -80,7 +83,12 @@ def check_translation_progress():
     #     percent = (translated / total) * 100
     #     LOGGER.info(f"Done: {percent:>6.2f}% | File: {filename}")
 
-    print_progress_table(file_stats, global_translated, global_total, dialog_progresses, string_progresses)
+    print_progress_console(file_stats, global_translated, global_total, dialog_progresses, string_progresses)
+    generated_table = generate_progress_markdown(file_stats, global_translated, global_total, dialog_progresses, string_progresses)
+    # print(generated_table)
+    if args.update_readme:
+        update_readme_progress(generated_table)
+
     if global_total > 0:
         global_percent = (global_translated / global_total) * 100
         LOGGER.info(f"GLOBAL DONE: {global_percent:>6.2f}% ({global_translated} / {global_total})")

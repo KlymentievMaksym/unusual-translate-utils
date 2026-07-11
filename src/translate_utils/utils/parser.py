@@ -2,7 +2,7 @@ import re
 import argparse
 from pathlib import Path
 
-from utils.dataclasses import CleanupRepeatsArgs, CheckTranslationProgressArgs, DialogueLine
+from translate_utils.utils.dataclasses import CleanupRepeatsArgs, CheckTranslationProgressArgs, DialogueLine
 
 RE_LABEL = re.compile(r'^translate\s+\w+\s+(\w+):')
 RE_STRINGS_BLOCK = re.compile(r'^translate\s+\w+\s+strings:')
@@ -11,8 +11,13 @@ RE_SCRIPT_POS = re.compile(r'^\s*#\s*(?:.*[/\\])?([^/\\]+\.rpy:\d+)')
 RE_COMMENT_TEXT = re.compile(r'^\s*#\s*(?:(\w+)\s+)?\"(.*)\"$')
 RE_ACTIVE_TEXT = re.compile(r'^\s*(?:(\w+)\s+)?\"(.*)\"$')
 
-RE_OLD = re.compile(r'^(\s*)old\s+("""|")(.*)\2$', re.DOTALL)
-RE_NEW = re.compile(r'^\s*new\s+("""|")(.*)\1$', re.DOTALL)
+# RE_OLD = re.compile(r'^(\s*)old\s+("""|")(.*)\2$', re.DOTALL)
+# RE_NEW = re.compile(r'^\s*new\s+("""|")(.*)\1$', re.DOTALL)
+RE_OLD_SINGLE = re.compile(r'^(\s*)old\s+\"(.*)\"$')
+RE_NEW_SINGLE = re.compile(r'^\s*new\s+\"(.*)\"$')
+
+RE_OLD_MULTI = re.compile(r'^(\s)*old\s+\"\"\"')
+RE_NEW_MULTI = re.compile(r'^\s*new\s+\"\"\"')
 
 def cleanup_repeats_parse_args():
     parser = argparse.ArgumentParser()
@@ -38,6 +43,11 @@ def check_translation_progress_parse_args():
         nargs="*",
         help="Relative or Absolute Path to the .rpy translation file or directory of them"
     )
+    parser.add_argument(
+        "--update-readme",
+        action="store_true",
+        help="Update README"
+    )
     return CheckTranslationProgressArgs.from_namespace(parser.parse_args())
 
 class RpyTranslationParser:
@@ -52,6 +62,10 @@ class RpyTranslationParser:
         self.temp_character = None
         self.temp_original_text = None
         self.temp_old_string = None
+        
+        self.in_multi_old = False
+        self.in_multi_new = False
+        self.multi_buffer: list[str] = []
 
     def _reset_state(self):
         """Clears stored data and state variables for a fresh parse."""
@@ -63,6 +77,10 @@ class RpyTranslationParser:
         self.temp_character = None
         self.temp_original_text = None
         self.temp_old_string = None
+
+        self.in_multi_old = False
+        self.in_multi_new = False
+        self.multi_buffer.clear()
 
     # ==========================================
     # Public Methods
@@ -112,6 +130,9 @@ class RpyTranslationParser:
 
     def _check_state_transitions(self, line: str) -> bool:
         """State Management. Updates modes and resets temp variables."""
+        if self.in_multi_old or self.in_multi_new:
+            return False
+
         pos_match = RE_SCRIPT_POS.match(line)
         if pos_match:
             self.temp_script_pos = pos_match.group(1)
@@ -152,11 +173,45 @@ class RpyTranslationParser:
 
     def _parse_string(self, line: str):
         """UI String Logic. Extracts and stores UI translations."""
-        old_match = RE_OLD.match(line)
+        if self.in_multi_old:
+            self.multi_buffer.append(line)
+            if '"""' in line:
+                self.in_multi_old = False
+                self.temp_old_string = "\n".join(self.multi_buffer).replace('"""', '').strip()
+                self.multi_buffer.clear()
+            return
+        
+        if self.in_multi_new:
+            self.multi_buffer.append(line)
+            if '"""' in line:
+                self.in_multi_new = False
+                translated_text = "\n".join(self.multi_buffer).replace('"""', '').strip()
+                
+                if self.temp_old_string is not None:
+                    self.ui_strings[self.temp_old_string] = translated_text
+                    self.temp_old_string = None
+                self.multi_buffer.clear()
+            return
+
+        if RE_OLD_MULTI.match(line):
+            self.in_multi_old = True
+            content = line.split('"""', 1)[1]
+            if content:
+                self.multi_buffer.append(content)
+            return
+        
+        if RE_NEW_MULTI.match(line):
+            self.in_multi_new = True
+            content = line.split('"""', 1)[1]
+            if content:
+                self.multi_buffer.append(content)
+            return
+        
+        old_match = RE_OLD_SINGLE.match(line)
         if old_match:
-            self.temp_old_string = old_match.group(3)
+            self.temp_old_string = old_match.group(2)
         else:
-            new_match = RE_NEW.match(line)
+            new_match = RE_NEW_SINGLE.match(line)
             if new_match and self.temp_old_string is not None:
-                self.ui_strings[self.temp_old_string] = new_match.group(2)
+                self.ui_strings[self.temp_old_string] = new_match.group(1)
                 self.temp_old_string = None

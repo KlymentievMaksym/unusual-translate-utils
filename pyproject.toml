@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools >= 77.0.3", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "GW-translate"
+dynamic = ["version"]
+requires-python = ">= 3.12"
+authors = [
+  {name = "---", email = "---@gmail.com"},
+]
+description = "---"
+readme = "README.md"
+license = "MIT"
+dependencies = [
+    "tabulate",
+    "rich"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-benchmark",
+    "pytest-cov",
+]
+
+[project.urls]
+Repository = "https://github.com/LagencyUA/GW-translate.git"
+Issues = "https://github.com/LagencyUA/GW-translate/issues"
+
+[project.scripts]
+check_translation_progress = "translate_utils.check_translation_progress:check_translation_progress"
+cleanup_repeats = "translate_utils.cleanup_repeats:cleanup_repeats"
+
+# [project.entry-points."spam.magical"]
+# tomatoes = "spam:main_tomatoes"
+
+[tool.setuptools_scm]
+root = "."
+fallback_version = "1.0.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"

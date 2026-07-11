@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from utils.logger import setup_logging
-from utils.parser import cleanup_repeats_parse_args, RpyTranslationParser
-from utils.visualize import print_dialogue_table
-from utils.cleaner import process_cleaned_lines
-from utils.saver import save_lines_to_file
+from translate_utils.utils.logger import setup_logging
+from translate_utils.utils.parser import cleanup_repeats_parse_args, RpyTranslationParser
+from translate_utils.utils.visualize.terminal import print_dialogue_console
+from translate_utils.utils.cleaner import process_cleaned_lines
+from translate_utils.utils.saver import save_lines_to_file
 
 
 LOGGER = setup_logging("CleanupRepeats")
@@ -26,7 +26,7 @@ def cleanup_repeats():
 
             LOGGER.info(f"Lengths: scripts {len(dialogues)}")
 
-            print_dialogue_table(dialogues, limit=3)
+            print_dialogue_console(dialogues, limit=5)
 
             output_lines, replaced_count = process_cleaned_lines(filepath, dialogues)
             LOGGER.info(f"Replaced {replaced_count} duplicate strings.")

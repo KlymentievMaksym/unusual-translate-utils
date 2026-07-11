@@ -1,4 +1,4 @@
-from utils.dataclasses import DialogueLine
+from translate_utils.utils.dataclasses import DialogueLine
 
 
 def print_example(dialogues: dict[str, DialogueLine] | None = None, ui_strings: dict[str, str] | None = None):
