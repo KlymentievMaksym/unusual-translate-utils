@@ -8,43 +8,16 @@ from translate_utils.utils.color import get_color_gradient
 
 CONSOLE = Console()
 
-
-def print_dialogue_console(dialogues: dict, limit: int = 15) -> None:
+# --- Print ---
+def print_dialogue_console(dialogues: dict, limit: int = -1) -> None:
     """Renders the parsed dialogues as a Rich table in the terminal."""
     if not dialogues:
         CONSOLE.print("[yellow]--- Parsed Dialogues (Empty) ---[/yellow]\n")
         return
-
-    table = Table(title="Parsed Dialogues", show_header=True, header_style="bold magenta")
-    table.add_column("Label", style="cyan", no_wrap=True)
-    table.add_column("Char", style="green", justify="center")
-    table.add_column("Original Text", style="yellow")
-    table.add_column("Translated Text", style="blue")
-
-    for label, data in list(dialogues.items())[:limit]:
-        char = data.character if data.character else "-"
-        table.add_row(label, char, truncate(data.original, 40), truncate(data.translated, 40))
-
+    table = generate_dialogue_table(dialogues, limit)
     CONSOLE.print(table)
     if len(dialogues) > limit:
         CONSOLE.print(f"[dim]... and {len(dialogues) - limit} more rows.[/dim]\n")
-
-def print_strings_console(ui_strings: dict, limit: int = 15) -> None:
-    """Renders the parsed UI strings as a Rich table in the terminal."""
-    if not ui_strings:
-        CONSOLE.print("[yellow]--- Parsed UI Strings (Empty) ---[/yellow]\n")
-        return
-
-    table = Table(title="Parsed UI Strings", show_header=True, header_style="bold magenta")
-    table.add_column("Original String", style="yellow")
-    table.add_column("New String", style="blue")
-
-    for old, new in list(ui_strings.items())[:limit]:
-        table.add_row(truncate(old, 50), truncate(new, 50))
-
-    CONSOLE.print(table)
-    if len(ui_strings) > limit:
-        CONSOLE.print(f"[dim]... and {len(ui_strings) - limit} more rows.[/dim]\n")
 
 def print_progress_console(file_stats: dict, global_translated: int, global_total: int, dialog_progresses: list, string_progresses: list) -> None:
     """Renders the translation progress as a Rich table in the terminal."""
@@ -52,6 +25,51 @@ def print_progress_console(file_stats: dict, global_translated: int, global_tota
         CONSOLE.print("[yellow]--- Translation Progress Report (Empty) ---[/yellow]\n")
         return
 
+    table = generate_progress_table(file_stats, global_translated, global_total, dialog_progresses, string_progresses)
+
+    CONSOLE.print(table)
+
+def print_strings_console(ui_strings: dict, limit: int = -1) -> None:
+    """Renders the parsed UI strings as a Rich table in the terminal."""
+    if not ui_strings:
+        CONSOLE.print("[yellow]--- Parsed UI Strings (Empty) ---[/yellow]\n")
+        return
+
+    table = generate_strings_table(ui_strings, limit)
+
+    CONSOLE.print(table)
+    if len(ui_strings) > limit:
+        CONSOLE.print(f"[dim]... and {len(ui_strings) - limit} more rows.[/dim]\n")
+
+# --- Generate ---
+def generate_dialogue_table(dialogues: dict, limit: int = -1) -> Table:
+    """Generates the parsed dialogues as a Rich table."""
+    table = Table(title="Parsed Dialogues", show_header=True, header_style="bold magenta")
+    table.add_column("Label", style="cyan", no_wrap=True)
+    table.add_column("Char", style="green", justify="center")
+    table.add_column("Original Text", style="yellow")
+    table.add_column("Translated Text", style="blue")
+
+    limit = len(dialogues) if limit == -1 else limit
+    for label, data in list(dialogues.items())[:limit]:
+        char = data.character if data.character else "-"
+        table.add_row(label, char, truncate(data.original, 40), truncate(data.translated, 40))
+
+    return table
+
+def generate_strings_table(ui_strings: dict, limit: int = -1) -> Table:
+    """Generates the parsed strings as a Rich table."""
+    table = Table(title="Parsed UI Strings", show_header=True, header_style="bold magenta")
+    table.add_column("Original String", style="yellow")
+    table.add_column("New String", style="blue")
+
+    for old, new in list(ui_strings.items())[:limit]:
+        table.add_row(truncate(old, 50), truncate(new, 50))
+
+    return table
+
+def generate_progress_table(file_stats: dict, global_translated: int, global_total: int, dialog_progresses: list, string_progresses: list) -> Table:
+    """Generates the progress as a Rich table."""
     table = Table(title="Translation Progress Report", show_header=True, header_style="bold magenta")
     table.add_column("File Name", style="cyan")
     table.add_column("Statistics (Total)", justify="right", style="white")
@@ -81,4 +99,4 @@ def print_progress_console(file_stats: dict, global_translated: int, global_tota
             f"[bold cyan]{global_percent:>6.2f}%[/bold cyan]"
         )
 
-    CONSOLE.print(table)
+    return table

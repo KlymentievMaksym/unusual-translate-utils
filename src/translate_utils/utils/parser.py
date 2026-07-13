@@ -2,7 +2,7 @@ import re
 import argparse
 from pathlib import Path
 
-from translate_utils.utils.dataclasses import CleanupRepeatsArgs, CheckTranslationProgressArgs, DialogueLine
+from translate_utils.utils.dataclasses import CleanupRepeatsArgs, CheckTranslationProgressArgs, DialogueLine, Progress
 
 RE_LABEL = re.compile(r'^translate\s+\w+\s+(\w+):')
 RE_STRINGS_BLOCK = re.compile(r'^translate\s+\w+\s+strings:')
@@ -50,6 +50,58 @@ def check_translation_progress_parse_args():
         help="Update README"
     )
     return CheckTranslationProgressArgs.from_namespace(parser.parse_args())
+
+def calculate_file_progress(filepath: Path, parser: RpyTranslationParser) -> tuple[int, int, Progress, Progress]:
+    """
+    Parses a single file and returns (translated_count, total_count).
+    """
+    dialogues, ui_strings = parser.parse_all(filepath)
+    dialog_length = len(dialogues)
+    string_length = len(ui_strings)
+
+    total = dialog_length + string_length
+
+    dialog_translated = 0
+    string_translated = 0
+    for label, dialog in dialogues.items():
+        if dialog.original != dialog.translated and not dialog.translated.isascii():
+            dialog_translated += 1
+    for old, new in ui_strings.items():
+        if old != new and not new.isascii():
+            string_translated += 1
+
+    translated = dialog_translated + string_translated
+
+    return translated, total, Progress(dialog_translated, dialog_length), Progress(string_translated, string_length)
+
+def get_raw_translation_data(paths_to_check: list[Path]):
+    """Збирає дані без прив'язки до argparse та принтів."""
+    parser = RpyTranslationParser()
+    file_stats: dict[str, tuple[int, int]] = {}
+    global_translated = 0
+    global_total = 0
+    dialog_progresses: list[Progress] = []
+    string_progresses: list[Progress] = []
+    
+    rpy_files = []
+    for target_path in paths_to_check:
+        if target_path.is_file() and target_path.suffix == ".rpy":
+            rpy_files.append(target_path)
+        elif target_path.is_dir():
+            rpy_files.extend(target_path.rglob("*.rpy"))
+            
+    rpy_files.sort(key=lambda path: path.name)
+
+    for filepath in rpy_files:
+        translated, total, dialog_progress, string_progress = calculate_file_progress(filepath, parser)
+        if total > 0:
+            dialog_progresses.append(dialog_progress)
+            string_progresses.append(string_progress)
+            file_stats[filepath.name] = (translated, total)
+            global_translated += translated
+            global_total += total
+            
+    return file_stats, global_translated, global_total, dialog_progresses, string_progresses
 
 class RpyTranslationParser:
     """Handles the stateful parsing of Ren'Py translation files."""

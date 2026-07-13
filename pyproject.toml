@@ -14,7 +14,8 @@ readme = "README.md"
 license = "MIT"
 dependencies = [
     "tabulate",
-    "rich"
+    "rich",
+    "textual"
 ]
 
 [project.optional-dependencies]
