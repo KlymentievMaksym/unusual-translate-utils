@@ -28,6 +28,7 @@ class RpyTranslationParser:
     def _extract_strings(self, text: str) -> dict[str, str]:
         ui_strings: dict[str, str] = {}
         for match in RE_STRINGS_BLOCK.finditer(text):
+            # if match.group(1) is None:
             ui_strings[match.group(3)] = match.group(5)
         return ui_strings
         

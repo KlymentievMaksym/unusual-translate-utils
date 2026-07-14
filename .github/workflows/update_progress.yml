@@ -34,7 +34,7 @@ jobs:
         if [ -f utils-tools/pyproject.toml ]; then pip install -e ./utils-tools/; fi
 
     - name: Run Progress Script
-      run: check_translation_progress ./game/tl/ukrainian --update-readme ./README.md
+      run: gwt-status ./game/tl/ukrainian --update-readme ./README.md
 
     - name: Commit and Push changes
       uses: stefanzweifel/git-auto-commit-action@v5

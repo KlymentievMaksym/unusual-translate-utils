@@ -31,7 +31,7 @@ Issues = "https://github.com/LagencyUA/GW-translate/issues"
 
 [project.scripts]
 gwt-app = "translate_utils.main:main"
-gwt-clean = "translate_utils.presentation.cli.cleanup:cleanup_repeats"
+gwt-clean = "translate_utils.presentation.cli.cleanup_repeats:cleanup_repeats"
 gwt-status = "translate_utils.presentation.cli.check_progress:check_translation_progress"
 
 # check_translation_progress = "translate_utils.check_translation_progress:check_translation_progress"

@@ -3,18 +3,18 @@ import logging
 from datetime import datetime
 
 from translate_utils.infrastructure.log_cleaner import cleanup_old_logs
-from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_TRANSLATION
+from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_LOGS
 
 sys.stdout.reconfigure(encoding='utf-8')
 
 
 def setup_logging(command_name: str) -> logging.Logger:
-    cleanup_old_logs(DEFAULT_DIR_FOR_TRANSLATION, max_files=10)
+    cleanup_old_logs(DEFAULT_DIR_FOR_LOGS, max_files=10)
 
     curr_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     handlers = [
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler(filename=DEFAULT_DIR_FOR_TRANSLATION / f"{command_name}_{curr_time}.log", encoding="utf-8")
+        logging.FileHandler(filename=DEFAULT_DIR_FOR_LOGS / f"{command_name}_{curr_time}.log", encoding="utf-8")
     ]
 
     logging.basicConfig(handlers=handlers, level=logging.INFO, format='[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s', force=True)
