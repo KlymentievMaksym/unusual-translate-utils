@@ -30,8 +30,12 @@ Repository = "https://github.com/LagencyUA/GW-translate.git"
 Issues = "https://github.com/LagencyUA/GW-translate/issues"
 
 [project.scripts]
-check_translation_progress = "translate_utils.check_translation_progress:check_translation_progress"
-cleanup_repeats = "translate_utils.cleanup_repeats:cleanup_repeats"
+gwt-app = "translate_utils.main:main"
+gwt-clean = "translate_utils.presentation.cli.cleanup:cleanup_repeats"
+gwt-status = "translate_utils.presentation.cli.check_progress:check_translation_progress"
+
+# check_translation_progress = "translate_utils.check_translation_progress:check_translation_progress"
+# cleanup_repeats = "translate_utils.cleanup_repeats:cleanup_repeats"
 
 # [project.entry-points."spam.magical"]
 # tomatoes = "spam:main_tomatoes"

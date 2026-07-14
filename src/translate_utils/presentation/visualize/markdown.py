@@ -1,6 +1,6 @@
 from tabulate import tabulate
 
-from translate_utils.utils.visualize.utils import truncate
+from translate_utils.presentation.visualize.utils import truncate
 
 
 def generate_dialogue_markdown(dialogues: dict, limit: int = 15) -> str:

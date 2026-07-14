@@ -3,7 +3,7 @@ from textual.screen import Screen
 from textual.widgets import Header, Footer, TabbedContent
 from textual.containers import Center, Vertical
 
-from translate_utils.ui.composer import ActionPanel
+from translate_utils.presentation.ui.base_layout import ActionPanel
 
 TABS_TITLE = "Navigation"
 TAB_IDS = {

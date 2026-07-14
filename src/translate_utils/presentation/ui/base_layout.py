@@ -1,10 +1,10 @@
 from textual.app import ComposeResult
 from textual.widgets import Static, TabbedContent, TabPane, Label
 
-from translate_utils.ui.components.status_tab import StatusTab
-from translate_utils.ui.components.clean_tab import CleanTab
-from translate_utils.ui.components.compare_tab import CompareTab
-from translate_utils.ui.components.translate_tab import TranslateTab
+from translate_utils.presentation.ui.components.status_tab import StatusTab
+from translate_utils.presentation.ui.components.clean_tab import CleanTab
+from translate_utils.presentation.ui.components.compare_tab import CompareTab
+from translate_utils.presentation.ui.components.translate_tab import TranslateTab
 
 
 class ActionPanel(Static):

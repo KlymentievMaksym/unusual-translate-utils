@@ -2,8 +2,8 @@
 from rich.console import Console
 from rich.table import Table
 
-from translate_utils.utils.visualize.utils import truncate
-from translate_utils.utils.color import get_color_gradient
+from translate_utils.presentation.visualize.utils import truncate
+from translate_utils.presentation.color import get_color_gradient
 
 
 CONSOLE = Console()

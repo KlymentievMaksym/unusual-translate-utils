@@ -1,12 +1,12 @@
 import re
 from pathlib import Path
 
-from translate_utils.utils.logger import get_logger
-from translate_utils.utils.visualize.markdown import generate_progress_markdown
+from translate_utils.infrastructure.logger import get_logger
 
 LOGGER = get_logger(__name__)
 
-def update_readme_progress(generated_table, readme_path):
+def update_readme_progress(generated_table, readme_path: str | Path):
+    readme_path = Path(readme_path)
     if readme_path.exists():
         with open(readme_path, "r", encoding="utf-8") as f:
             content = f.read()

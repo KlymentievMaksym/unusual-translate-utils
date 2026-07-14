@@ -4,8 +4,9 @@ from textual.widgets import Static, Label, Button
 from textual.containers import VerticalScroll
 from pathlib import Path
 
+from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_TRANSLATION
 from translate_utils.utils.visualize.terminal import generate_progress_table
-from translate_utils.utils.parser import get_raw_translation_data
+from infrastructure.parser import get_raw_translation_data
 
 class StatusTab(Static):
     def compose(self) -> ComposeResult:
@@ -46,8 +47,7 @@ class StatusTab(Static):
         """
         Runs in a background thread so the UI doesn't freeze while parsing files.
         """
-        default_dir = Path(__file__).parents[4] / "game" / "tl" / "ukrainian"
-        current_mtime = self._get_latest_mtime(default_dir)
+        current_mtime = self._get_latest_mtime(DEFAULT_DIR_FOR_TRANSLATION)
         if not manual and current_mtime <= self._last_mtime:
             return
 
@@ -58,7 +58,7 @@ class StatusTab(Static):
 
         self.app.call_from_thread(update_ui, "Loading data... Please wait.")
 
-        file_stats, global_trn, global_tot, diag_prog, str_prog = get_raw_translation_data([default_dir])
+        file_stats, global_trn, global_tot, diag_prog, str_prog = get_raw_translation_data([DEFAULT_DIR_FOR_TRANSLATION])
         rich_table = generate_progress_table(file_stats, global_trn, global_tot, diag_prog, str_prog)
 
         self.app.call_from_thread(update_ui, rich_table)
