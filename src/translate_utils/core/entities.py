@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from translate_utils.core.rules import check_is_translated
+
 @dataclass(slots=True)
 class Progress:
     translated: int = 0
@@ -13,4 +15,4 @@ class DialogueLine:
     translated: str
 
     def is_translated(self):
-        return self.original != self.translated and not self.translated.isascii()
+        return check_is_translated(self.original, self.translated)

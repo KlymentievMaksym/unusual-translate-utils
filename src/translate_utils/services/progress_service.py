@@ -10,29 +10,6 @@ class ProgressService:
     def __init__(self, parser: RpyTranslationParser) -> None:
         self.parser = parser
 
-    def calculate_file_progress(self, filepath: Path) -> tuple[int, int, Progress, Progress]:
-        """
-        Parses a single file and returns (translated_count, total_count).
-        """
-        dialogues, ui_strings = self.parser.parse_all(filepath)
-        dialog_length = len(dialogues)
-        string_length = len(ui_strings)
-
-        total = dialog_length + string_length
-
-        dialog_translated = 0
-        string_translated = 0
-        for label, dialog in dialogues.items():
-            if dialog.is_translated():
-                dialog_translated += 1
-        for old, new in ui_strings.items():
-            if old != new and not new.isascii():
-                string_translated += 1
-
-        translated = dialog_translated + string_translated
-
-        return translated, total, Progress(dialog_translated, dialog_length), Progress(string_translated, string_length)
-
     def get_raw_translation_data(self, paths_to_check: list[Path]) -> (tuple[dict[str, tuple[int, int]], int, int, list[Progress], list[Progress]] | None):
         file_stats: dict[str, tuple[int, int]] = {}
         global_translated = 0
@@ -55,7 +32,7 @@ class ProgressService:
         rpy_files.sort(key=lambda path: path.name)
 
         for filepath in rpy_files:
-            translated, total, dialog_progress, string_progress = self.calculate_file_progress(filepath)
+            translated, total, dialog_progress, string_progress = self.parser.count_progress(filepath)
             if total > 0:
                 dialog_progresses.append(dialog_progress)
                 string_progresses.append(string_progress)
