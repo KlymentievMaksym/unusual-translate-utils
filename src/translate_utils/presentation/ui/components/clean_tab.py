@@ -9,9 +9,9 @@ from textual.app import ComposeResult
 from textual.widgets import Static, Label, Button, Input, Select, Checkbox
 from textual.containers import VerticalScroll, Horizontal
 
-# --- ВАШІ ІМПОРТИ З БЕКЕНДУ ---
-from infrastructure.parser import RpyTranslationParser
-from core.cleaner import process_cleaned_lines
+from translate_utils.infrastructure.parser import RpyTranslationParser
+from translate_utils.core.cleaner import TranslationCleaner
+from translate_utils.core.replacer_methods import AVAILABLE_METHODS, CleanStrategy
 # from translate_utils.utils.saver import save_lines_to_file # (Ми напишемо збереження напряму, щоб підтримувати зміну директорії)
 
 class CleanTab(Static):
@@ -122,7 +122,9 @@ class CleanTab(Static):
             
             # Якщо у process_cleaned_lines колись додасться підтримка method, 
             # ви зможете передати його сюди: process_cleaned_lines(..., method=method)
-            output_lines, replaced_count = process_cleaned_lines(target_path, dialogues)
+            clean_method: CleanStrategy = AVAILABLE_METHODS.get(method, AVAILABLE_METHODS["only_comment"])
+
+            output_lines, replaced_count = TranslationCleaner(dialogues, clean_method).clean(parser.read_file(target_path))
             
             # 2. Збереження
             # (Записуємо файл напряму, щоб повністю підтримувати вибір папки з UI)
