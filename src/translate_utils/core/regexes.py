@@ -1,20 +1,34 @@
 import re
 
-RE_TRANSLATE_BLOCK = re.compile(
-    r'^\s*#\s*(?:.*?[/\\])?([^/\\]+\.rpy:\d+)\n'  # 1 - script in game position
-    r'^translate\s+\w+\s+(\w+):\n'                # 2 - script label
-    r'^\s*#\s*(?:(\w+)\s+)?\"(.*?)\"$\n'          # 3 - character; 4 - original text
-    r'^\s*(?:(\w+)\s+)?\"(.*?)\"$',               # 5 - character; 6 - translated text
-    re.MULTILINE
+
+_SCRIPT_POSITION = r"(?P<script_position>[^/\\]+\.rpy:\d+)"
+
+def _quoted(name: str, n: int) -> str:
+    quote_group = rf'"""|"'
+    return rf'(?P<quote{n}>{quote_group})(?P<{name}>.*?)(?<!\\)(?P=quote{n})'
+
+
+RE_TAGS = re.compile(r"\{.*?\}|\[.*?\]")
+RE_WORDS = re.compile(r'\w+')
+
+# Guaranteed groups: script_position, script_label, script_hash, original_character?, original_text, translation_character?, translation_text
+RE_TRANSLATE_BLOCK: re.Pattern[str] = re.compile(
+    rf"""
+    ^ \s* \# \s* (?:.*? [/\\])? {_SCRIPT_POSITION} \n
+    ^ translate \s+ \w+ \s+ (?P<script_label>\w+) _ (?P<script_hash>\w+): \n
+    ^ \s* \# \s* (?:(?P<original_character>\w+) \s+)? "(?P<original_text>(?:[^"\\]|\\.)*)" $ \n
+    ^ \s*        (?:(?P<translation_character>\w+) \s+)? "(?P<translation_text>(?:[^"\\]|\\.)*)" $
+    """,
+    re.MULTILINE | re.VERBOSE,
 )
-# RE_STRINGS_BLOCK = re.compile(
-#     r'(?:^\s*#\s*(?:[^\n]*?[/\\])?([^/\\]+\.rpy:\d+)\n)?'  # 1 - comment (optional)
-#     r'^([ \t]+)old\s+("""|")(.*?)(?<!\\)\3'          # 2 - indent; 3 - " or """; 4 - old text
-#     r'\n\2new\s+("""|")(.*?)(?<!\\)\5',              # 5 - " or """; 6 - new text
-#     re.MULTILINE | re.DOTALL
-# )
-RE_STRINGS_BLOCK = re.compile(
-    r'^([ \t]+)old\s+("""|")(.*?)(?<!\\)\2'          # 1 - indent; 2 - " or """; 3 - old text
-    r'\n\1new\s+("""|")(.*?)(?<!\\)\4',              # 4 - " or """; 5 - new text
-    re.MULTILINE | re.DOTALL
+
+# Guaranteed groups: old_text, new_text
+# Maybe later will add (?: ^ \s* # \s* (?:[^\n]*? [/\\])? {_SCRIPT_POSITION} \n)
+RE_STRINGS_BLOCK: re.Pattern[str] = re.compile(
+    rf"""
+    ^ (?P<indent>[ \t]+) old \s+ {_quoted("old_text", 1)}
+    \n
+    (?P=indent) new \s+ {_quoted("new_text", 2)}
+    """,
+    re.MULTILINE | re.DOTALL | re.VERBOSE,
 )

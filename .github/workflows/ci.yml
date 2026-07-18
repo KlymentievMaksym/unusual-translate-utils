@@ -1,0 +1,89 @@
+name: Test Pipeline
+
+on:
+  push:
+    branches: [ "utils" ]
+  pull_request:
+    branches: [ "utils" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: 'pip'
+
+    - name: Cache Mypy
+      uses: actions/cache@v4
+      with:
+        path: .mypy_cache
+        key: mypy-${{ runner.os }}-3.12-${{ hashFiles('**/*.py') }}
+        restore-keys: |
+          mypy-${{ runner.os }}-3.12-
+
+    - name: Install development dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[test, check]"
+
+    - name: Run Ruff Linter
+      run: make lint
+
+    - name: Run Ruff Formatter
+      run: make check-format
+
+    - name: Run Mypy (Static Type Checker)
+      run: make typecheck
+
+  build-and-test:
+    needs: code-quality
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[test]"
+
+    - name: Run pytest (Compatibility Check)
+      if: matrix.python-version != '3.12'
+      run: make test
+
+    - name: Run pytest with coverage (Main Version)
+      if: matrix.python-version == '3.12'
+      run: make test-cov
+
+    - name: Upload coverage report
+      if: matrix.python-version == '3.12'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-main
+        path: coverage.xml
+        retention-days: 3
