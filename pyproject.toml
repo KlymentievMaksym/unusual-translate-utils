@@ -27,6 +27,7 @@ test = [
 check = [
     "ruff",
     "mypy",
+    "types-tabulate",
 ]
 
 [project.urls]

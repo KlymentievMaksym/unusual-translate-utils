@@ -1,5 +1,6 @@
-from typing import Protocol, Final
 from enum import Enum
+from typing import Final, Protocol
+
 
 class CleanStrategy(Protocol):
     def __call__(self, text: str, indent: str, comment: str, /) -> str:

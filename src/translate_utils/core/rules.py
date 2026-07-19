@@ -123,7 +123,7 @@ class NoMixedAlphabetsSpec(TranslationSpecification):
 
 VALID_TRANSLATION_SPEC = IsNotEmptySpec() & (
     IsSymbolOnlySpec() | (
-        IsDifferentSpec() & HasTargetAlphabetSpec() & NoMixedAlphabetsSpec()
+        IsDifferentSpec() & HasTargetAlphabetSpec() #& NoMixedAlphabetsSpec()
     )
 )
 

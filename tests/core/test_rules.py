@@ -1,12 +1,12 @@
 import pytest
 
 from translate_utils.core.rules import (
-    IsNotEmptySpec,
-    IsDifferentSpec,
     HasTargetAlphabetSpec,
-    NoMixedAlphabetsSpec,
+    IsDifferentSpec,
+    IsNotEmptySpec,
     IsSymbolOnlySpec,
-    check_is_translated
+    NoMixedAlphabetsSpec,
+    check_is_translated,
 )
 
 # ==========================================

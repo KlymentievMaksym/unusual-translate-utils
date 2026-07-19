@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
-from translate_utils.core.entities import DialogueLine, Progress
+from translate_utils.core.entities import DialogueLine, FileProgressSummary, TranslationStats
+
 
 class ReportDataMixin(ABC):
     """Shared item/empty/overflow bookkeeping for any report renderer."""
@@ -8,7 +10,7 @@ class ReportDataMixin(ABC):
 
     @property
     @abstractmethod
-    def records(self) -> dict: ...
+    def records(self) -> dict[str, Any]: ...
 
     @property
     @abstractmethod
@@ -31,37 +33,30 @@ class ReportDataMixin(ABC):
         return f"... and {len(self.records) - self.limit} more rows."
 
 class DialogueReportData(ReportDataMixin):
-    def __init__(self, dialogues: dict[str, DialogueLine], limit=15):
+    def __init__(self, dialogues: dict[str, DialogueLine], limit: int = 15) -> None:
         self.dialogues = dialogues
         self._raw_limit = limit
 
     @property
-    def records(self): return self.dialogues
+    def records(self) -> dict[str, DialogueLine]: return self.dialogues
     @property
-    def report_name(self): return "Parsed Dialogues"
+    def report_name(self) -> str: return "Parsed Dialogues"
 
 class StringReportData(ReportDataMixin):
-    def __init__(self, ui_strings: dict[str, str], limit=15):
+    def __init__(self, ui_strings: dict[str, str], limit: int = 15) -> None:
         self.ui_strings = ui_strings
         self._raw_limit = limit
 
     @property
-    def records(self): return self.ui_strings
+    def records(self) -> dict[str, str]: return self.ui_strings
     @property
-    def report_name(self): return "Parsed UI Strings"
+    def report_name(self) -> str: return "Parsed UI Strings"
 
 class ProgressReportData(ReportDataMixin):
-    def __init__(self, file_stats: dict, global_translated: int, global_total: int, dialog_progresses: list[Progress], string_progresses: list[Progress]) -> None:
-        self.file_stats = file_stats
-        self.global_translated = global_translated
-        self.global_total = global_total
-        self.dialog_progresses = dialog_progresses
-        self.string_progresses = string_progresses
+    def __init__(self, translation_stats: TranslationStats) -> None:
+        self.translation_stats = translation_stats
 
     @property
-    def records(self): return self.file_stats
+    def records(self) -> dict[str, FileProgressSummary]: return self.translation_stats.file_details
     @property
-    def report_name(self): return "Translation Progress Report"
-    @property
-    def global_percent(self) -> float:
-        return (self.global_translated / self.global_total) * 100 if self.global_total > 0 else 0.0
+    def report_name(self) -> str: return "Translation Progress Report"

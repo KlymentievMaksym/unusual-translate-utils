@@ -1,13 +1,18 @@
+from __future__ import annotations
+
 import argparse
 from dataclasses import dataclass
 
+from typing_extensions import Self
+
 from translate_utils.core.replacer_methods import AVAILABLE_METHODS
+
 
 # --- ARGS ---
 @dataclass
 class Args:
     @classmethod
-    def from_namespace(cls, namespace: argparse.Namespace):
+    def from_namespace(cls, namespace: argparse.Namespace) -> Self:
         return cls(**vars(namespace))
 
 @dataclass(slots=True)
@@ -16,7 +21,7 @@ class CleanupRepeatsArgs(Args):
     name: str | None
     clean_method: str
 
-    def is_suitable_clean_method(self):
+    def is_suitable_clean_method(self) -> bool:
         return self.clean_method in AVAILABLE_METHODS
 
 @dataclass(slots=True)
@@ -25,11 +30,11 @@ class CheckTranslationProgressArgs(Args):
     update_readme: str | None
 
 # --- ARGPARSE ---
-def cleanup_repeats_parse_args():
+def cleanup_repeats_parse_args() -> CleanupRepeatsArgs:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "filepaths", 
-        type=str, 
+        "filepaths",
+        type=str,
         nargs="+",
         help="Relative or Absolute Path to the .rpy translation file"
     )
@@ -47,17 +52,17 @@ def cleanup_repeats_parse_args():
     )
     return CleanupRepeatsArgs.from_namespace(parser.parse_args())
 
-def check_translation_progress_parse_args():
+def check_translation_progress_parse_args() -> CheckTranslationProgressArgs:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "filepaths", 
-        type=str, 
+        "filepaths",
+        type=str,
         nargs="*",
         help="Relative or Absolute Path to the .rpy translation file or directory of them"
     )
     parser.add_argument(
         "--update-readme",
-        type=str, 
+        type=str,
         default=None,
         help="Update README"
     )
