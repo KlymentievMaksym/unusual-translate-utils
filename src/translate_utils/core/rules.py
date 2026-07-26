@@ -1,11 +1,10 @@
-# core/rules.py
 from __future__ import annotations
 
-import re
 from abc import ABC, abstractmethod
 from typing import final
 
-from translate_utils.core.regexes import RE_TAGS, RE_WORDS
+from translate_utils.core.interfaces import TextProcessor
+
 
 class TranslationSpecification(ABC):
     """
@@ -83,9 +82,15 @@ class HasTargetAlphabetSpec(TranslationSpecification):
 
 @final
 class IsSymbolOnlySpec(TranslationSpecification):
-    """Checks if the original string consists entirely of non-alphabetical characters (e.g., punctuation, spaces, tags)."""
+    """
+    Checks if the original string consists entirely of non-alphabetical characters
+    (e.g., punctuation, spaces, tags).
+    """
+    def __init__(self, text_processor: TextProcessor) -> None:
+        self._processor = text_processor
+
     def is_satisfied_by(self, original: str, translated: str) -> bool:
-        clean_original = RE_TAGS.sub("", original)
+        clean_original = self._processor.strip_tags(original)
         return not any(c.isalpha() for c in clean_original)
 
 
@@ -96,37 +101,35 @@ class NoMixedAlphabetsSpec(TranslationSpecification):
     Catches common typing typos like 'Hellт' or 'Привiт' (with English 'i').
     Ignores structural tags.
     """
+    def __init__(self, text_processor: TextProcessor) -> None:
+        self._processor = text_processor
+
     def is_satisfied_by(self, original: str, translated: str) -> bool:
-        clean_translated = RE_TAGS.sub("", translated)
-        
-        words = RE_WORDS.findall(clean_translated)
-        
+        clean_translated = self._processor.strip_tags(translated)
+        words = self._processor.extract_words(clean_translated)
+
         for word in words:
             has_latin = False
             has_cyrillic = False
-            
+
             for c in word:
                 if c.isalpha():
                     if c.isascii():
                         has_latin = True
                     else:
                         has_cyrillic = True
-                        
+
                 if has_latin and has_cyrillic:
                     return False
-                    
+
         return True
 
 # ==========================================
 # Usage
 # ==========================================
+class TranslationValidator:
+    def __init__(self, specification: TranslationSpecification) -> None:
+        self._specification = specification
 
-VALID_TRANSLATION_SPEC = IsNotEmptySpec() & (
-    IsSymbolOnlySpec() | (
-        IsDifferentSpec() & HasTargetAlphabetSpec() #& NoMixedAlphabetsSpec()
-    )
-)
-
-def check_is_translated(original: str, translated: str) -> bool:
-    """Facade function to maintain compatibility with existing codebase."""
-    return VALID_TRANSLATION_SPEC.is_satisfied_by(original, translated)
+    def check_is_translated(self, original: str, translated: str) -> bool:
+        return self._specification.is_satisfied_by(original, translated)

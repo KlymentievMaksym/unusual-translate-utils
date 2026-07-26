@@ -1,39 +1,57 @@
-from translate_utils.core.entities import DialogueLine
-from translate_utils.core.regexes import RE_STRINGS_BLOCK, RE_TRANSLATE_BLOCK
-from translate_utils.infrastructure.logger import get_logger
-
-LOGGER = get_logger(__name__)
-
-class RpyTranslationParser:
-    """Handles the parsing of Ren'Py translation files."""
-    def parse_all(self, file_text: str) -> tuple[dict[str, DialogueLine], dict[str, str]]:
-        dialogues = self._extract_dialogues(file_text)
-        ui_strings = self._extract_strings(file_text)
-        return dialogues, ui_strings
-
-    def parse_dialogues_only(self, file_text: str) -> dict[str, DialogueLine]:
-        return self._extract_dialogues(file_text)
-
-    def parse_strings_only(self, file_text: str) -> dict[str, str]:
-        return self._extract_strings(file_text)
+from translate_utils.core.entities import DialogueLine, TranslationsDicts
+from translate_utils.core.interfaces import ParseStrategy
+from translate_utils.infrastructure.parsers.regexes import DLG_HASH, DLG_LABEL, RegexBlockConfig
 
 
-    @staticmethod
-    def _extract_strings(text: str) -> dict[str, str]:
+class BaseRegexParser:
+    """
+    Base class for regex-based parsers to share initialization logic.
+    """
+    def __init__(self, config: RegexBlockConfig) -> None:
+        self._config = config
+
+class RegexDialogueParser(BaseRegexParser):
+    """
+    Implementation of ParseStrategy[dict[str, DialogueLine]].
+    """
+    def __call__(self, file_text: str) -> dict[str, DialogueLine]:
+        dialogues: dict[str, DialogueLine] = {}
+
+        for match in self._config.pattern.finditer(file_text):
+            data = match.groupdict()
+            unique_key = f"{data[DLG_LABEL]}_{data[DLG_HASH]}"
+            dialogues[unique_key] = DialogueLine(**data)
+
+        return dialogues
+
+class RegexStringParser(BaseRegexParser):
+    """
+    Implementation of ParseStrategy[dict[str, str]].
+    """
+    def __call__(self, file_text: str) -> dict[str, str]:
         ui_strings: dict[str, str] = {}
-        for match in RE_STRINGS_BLOCK.finditer(text):
-            old = match.group("old_text")
-            new = match.group("new_text")
 
-            # script_position = match.group("script_position")
-            # if script_position is None:
+        for match in self._config.pattern.finditer(file_text):
+            old = match.group(self._config.original_group)
+            new = match.group(self._config.translated_group)
             ui_strings[old] = new
+
         return ui_strings
 
-    @staticmethod
-    def _extract_dialogues(text: str) -> dict[str, DialogueLine]:
-        dialogues: dict[str, DialogueLine] = {}
-        for match in RE_TRANSLATE_BLOCK.finditer(text):
-            data = match.groupdict()
-            dialogues[data["script_label"]] = DialogueLine(**data)
-        return dialogues
+class RegexDialAndStrParser:
+    """
+    Implementation of ParseStrategy[TranslationsDicts].
+    """
+    def __init__(
+            self,
+            dialogue_parser: ParseStrategy[dict[str, DialogueLine]],
+            string_parser: ParseStrategy[dict[str, str]]
+        ) -> None:
+
+        self._dialogue_parser = dialogue_parser
+        self._string_parser = string_parser
+
+    def __call__(self, file_text: str) -> TranslationsDicts:
+        dialogues: dict[str, DialogueLine] = self._dialogue_parser(file_text=file_text)
+        ui_strings: dict[str, str] = self._string_parser(file_text=file_text)
+        return TranslationsDicts(dialogues, ui_strings)

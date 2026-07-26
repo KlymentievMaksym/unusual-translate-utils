@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from translate_utils.core.rules import check_is_translated
 
-
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class Progress:
     translated: int = 0
     total: int = 0
@@ -16,8 +14,11 @@ class Progress:
             return 0.0
         return round((self.translated / self.total) * 100, 2)
 
+    @property
+    def is_empty(self) -> bool:
+        return self.total == 0
+
     def __add__(self, other: object) -> Progress:
-        """Allows adding two Progress objects together using the '+' operator."""
         if not isinstance(other, Progress):
             return NotImplemented
         return Progress(
@@ -34,9 +35,6 @@ class DialogueLine:
     original_text: str
     translation_character: str | None
     translation_text: str
-
-    def is_translated(self) -> bool:
-        return check_is_translated(self.original_text, self.translation_text)
 
 @dataclass(frozen=True, slots=True)
 class ExtractorParams:
@@ -55,7 +53,22 @@ class FileProgressSummary:
     dialogues: Progress
     strings: Progress
 
+    @property
+    def is_empty(self) -> bool:
+        return self.total.is_empty
+
+@dataclass(frozen=True, slots=True)
+class FileStats:
+    name: str
+    summary: FileProgressSummary
+
 @dataclass(frozen=True, slots=True)
 class TranslationStats:
     file_details: dict[str, FileProgressSummary] = field(default_factory=dict)
     global_total: Progress = field(default_factory=Progress)
+    failed_files: dict[str, str] = field(default_factory=dict)
+
+@dataclass(frozen=True, slots=True)
+class TranslationsDicts:
+    dialogues: dict[str, DialogueLine]
+    strings: dict[str, str]

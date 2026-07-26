@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from typing_extensions import Self
 
-from translate_utils.core.replacer_methods import AVAILABLE_METHODS
+from translate_utils.core.replacer_methods import AVAILABLE_METHODS, CleanMethod
 
 
 # --- ARGS ---
@@ -19,7 +19,7 @@ class Args:
 class CleanupRepeatsArgs(Args):
     filepaths: str | None
     name: str | None
-    clean_method: str
+    clean_method: CleanMethod
 
     def is_suitable_clean_method(self) -> bool:
         return self.clean_method in AVAILABLE_METHODS

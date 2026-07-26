@@ -28,3 +28,15 @@ DEFAULT_SETTINGS_FILE = DEFAULT_DIR_FOR_SETTINGS / "settings.json"
 DEFAULT_SETTINGS = {"active_tab": "tab_status"}
 if not DEFAULT_SETTINGS_FILE.exists():
     create_file_with_text(DEFAULT_SETTINGS_FILE, json.dumps(DEFAULT_SETTINGS))
+
+def gather_extension_files(paths: list[Path], extension: str = "rpy") -> list[Path]:
+    """
+    Scans provided paths and returns a sorted list of **.extension** files.
+    """
+    rpy_files = []
+    for target_path in paths:
+        if target_path.is_file() and target_path.suffix == f".{extension}":
+            rpy_files.append(target_path)
+        elif target_path.is_dir():
+            rpy_files.extend(target_path.rglob(f"*.{extension}"))
+    return sorted(rpy_files, key=lambda path: path.name)

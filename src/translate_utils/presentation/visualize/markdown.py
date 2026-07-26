@@ -1,3 +1,4 @@
+import itertools
 from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 
@@ -45,7 +46,8 @@ class DialogueMarkdownReport(BaseMarkdownReport[DialogueReportData]):
     """Generates a Markdown table string for parsed dialogues."""
     def _get_headers(self) -> list[str]: return [
         "Label",
-        "Char",
+        "Original Char",
+        "Translated Char",
         "Original Text",
         "Translated Text"
     ]
@@ -53,12 +55,12 @@ class DialogueMarkdownReport(BaseMarkdownReport[DialogueReportData]):
         return [
             [
                 label,
-                data.original_character if data.original_character else "-",
-                data.translation_character if data.translation_character else "-",
-                truncate(data.original_text, 40), 
+                data.original_character or "-",
+                data.translation_character or "-",
+                truncate(data.original_text, 40),
                 truncate(data.translation_text, 40)
             ]
-            for label, data in list(self._data.dialogues.items())[:self._data.limit]
+            for label, data in itertools.islice(self._data.dialogues.items(), self._data.limit)
         ]
 
 class StringMarkdownReport(BaseMarkdownReport[StringReportData]):
@@ -70,7 +72,7 @@ class StringMarkdownReport(BaseMarkdownReport[StringReportData]):
     def _get_rows(self) -> list[list[str]]:
         return [
             [truncate(old, 50), truncate(new, 50)] 
-            for old, new in list(self._data.ui_strings.items())[:self._data.limit]
+            for old, new in itertools.islice(self._data.ui_strings.items(), self._data.limit)
         ]
 
 class ProgressMarkdownReport(BaseMarkdownReport[ProgressReportData]):
@@ -93,7 +95,7 @@ class ProgressMarkdownReport(BaseMarkdownReport[ProgressReportData]):
 
             rows.append([filename, total_stats_str, dialogues_stats_str, strings_stats_str, f"{translation_status.total.percentage:.2f}%"])
 
-        if self._data.translation_stats.global_total.total > 0:
+        if not self._data.translation_stats.global_total.is_empty:
             rows.append([
                 "**GLOBAL TOTAL**",
                 f"**{self._data.translation_stats.global_total.translated} / {self._data.translation_stats.global_total.total}**",

@@ -1,38 +1,59 @@
 from pathlib import Path
 
 from translate_utils.core.cleaner import TranslationCleaner
-from translate_utils.core.replacer_methods import CleanStrategy
-from translate_utils.infrastructure.parser import RpyTranslationParser
-from translate_utils.infrastructure.saver import save_lines_to_file
+from translate_utils.core.entities import CleanResults, DialogueLine
+from translate_utils.core.interfaces import (
+    CleanStrategy,
+    ParseStrategy,
+    ReadStrategy,
+    ReverseLookupMapper,
+    WriteStrategy,
+)
 from translate_utils.infrastructure.logger import get_logger
 
 LOGGER = get_logger(__name__)
 
 class CleanupService:
-    def __init__(self, parser: RpyTranslationParser) -> None:
-        self.parser = parser
+    def __init__(
+            self,
+            file_reader: ReadStrategy[str],
+            file_parser: ParseStrategy[dict[str, DialogueLine]],
+            file_cleaner: TranslationCleaner,
+            file_writer: WriteStrategy[str],
+            mapper: ReverseLookupMapper,
+        ) -> None:
 
-    def clean_and_save(self, filepath: str | Path, new_name: str | Path | None, clean_method: CleanStrategy) -> None:
-        filepath = Path(filepath)
-        if not filepath.exists():
-            LOGGER.warning(f"Filepath {filepath.absolute()} is not exists")
-            return
-        file_text = self.parser.read_file(filepath)
+        self._file_reader = file_reader
+        self._file_parser = file_parser
+        self._file_cleaner = file_cleaner
+        self._file_writer = file_writer
+        self._mapper = mapper
 
-        new_filepath = new_name
-        if new_name is not None:
-            new_filepath = Path(new_name)
-            if new_filepath.exists():
-                LOGGER.warning(f"Filepath {new_filepath.absolute()} is exists")
+    def clean_and_save(
+            self,
+            filepath: str | Path,
+            clean_method: CleanStrategy,
+            new_name: str | Path | None
+        ) -> CleanResults:
 
-        dialogues = self.parser.parse_dialogues_only(filepath)
-        LOGGER.info(f"Scripts length is {len(dialogues)}")
-        # print_dialogue_console(dialogues, limit=5)
+        file_text = self._file_reader(filepath)
 
-        cleaner = TranslationCleaner(dialogues, clean_method)
+        new_filepath: Path = Path(filepath) if new_name is None else Path(new_name)
+        if new_filepath.exists():
+            LOGGER.warning(f"Filepath {new_filepath.absolute()} already exists, overwriting...")
 
-        text_to_replace_with, replaced_count = cleaner.clean(file_text)
-        LOGGER.info(f"Replaced {replaced_count} duplicate strings.")
+        dialogues = self._file_parser(file_text)
+        LOGGER.info(f"Parsed dict length is {len(dialogues)}")
 
-        out_filepath = save_lines_to_file(original_filepath=filepath, text_to_replace_with=text_to_replace_with, new_name=new_filepath)
-        LOGGER.info(f"Saved cleaned file to: {out_filepath}")
+        text_to_position = self._mapper(dialogues)
+
+        clean_results = self._file_cleaner.clean(file_text, text_to_position, clean_method)
+        LOGGER.info(f"Replaced {clean_results.replaced_count} duplicate strings.")
+
+        self._file_writer(
+            filepath=new_filepath,
+            content=clean_results.cleaned_text,
+        )
+        LOGGER.info(f"Saved cleaned file to: {new_filepath}")
+
+        return clean_results

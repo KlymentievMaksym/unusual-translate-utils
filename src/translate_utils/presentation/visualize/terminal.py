@@ -1,3 +1,4 @@
+import itertools
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
@@ -54,9 +55,9 @@ class DialogueTerminalReport(BaseTerminalReport[DialogueReportData]):
         return table
 
     def _populate_table_rows(self, table: Table) -> None:
-        for label, data in list(self._data.dialogues.items())[:self._data.limit]:
-            original_char = data.original_character if data.original_character else "-"
-            translation_char = data.translation_character if data.translation_character else "-"
+        for label, data in itertools.islice(self._data.dialogues.items(), self._data.limit):
+            original_char = data.original_character or "-"
+            translation_char = data.translation_character or "-"
             table.add_row(label, original_char, translation_char, truncate(data.original_text, 40), truncate(data.translation_text, 40))
 
 class StringTerminalReport(BaseTerminalReport[StringReportData]):
@@ -70,7 +71,7 @@ class StringTerminalReport(BaseTerminalReport[StringReportData]):
         return table
 
     def _populate_table_rows(self, table: Table) -> None:
-        for old, new in list(self._data.ui_strings.items())[:self._data.limit]:
+        for old, new in itertools.islice(self._data.ui_strings.items(), self._data.limit):
             table.add_row(truncate(old, 50), truncate(new, 50))
 
 class ProgressTerminalReport(BaseTerminalReport[ProgressReportData]):
@@ -96,7 +97,7 @@ class ProgressTerminalReport(BaseTerminalReport[ProgressReportData]):
             pct_color = get_color_gradient(translation_status.total.percentage)
             table.add_row(filename, total_stats_str, dialogues_stats_str, strings_stats_str, f"[{pct_color}]{pct_str}[/{pct_color}]")
 
-        if self._data.translation_stats.global_total.total > 0:
+        if not self._data.translation_stats.global_total.is_empty:
             table.add_section()
             table.add_row(
                 "[bold]GLOBAL TOTAL[/bold]",

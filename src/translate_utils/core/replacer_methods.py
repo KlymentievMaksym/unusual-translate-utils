@@ -1,10 +1,8 @@
 from enum import Enum
-from typing import Final, Protocol
+from typing import Final
 
+from translate_utils.core.interfaces import CleanStrategy
 
-class CleanStrategy(Protocol):
-    def __call__(self, text: str, indent: str, comment: str, /) -> str:
-        ...
 
 def add_comment(text: str, indent: str, comment: str) -> str:
     return f"{indent}# {comment}\n{text}"
