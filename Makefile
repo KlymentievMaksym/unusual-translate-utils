@@ -122,7 +122,7 @@ test: $(ENV_REQ) ## Run standard pytest suite (Supports ARGS)
 
 .PHONY: test-cov
 test-cov: $(ENV_REQ) ## Run tests with coverage report (Supports ARGS)
-	$(BIN)pytest --cov=$(COV_MODULE) --cov-report=term-missing --cov-report=xml $(ARGS)
+	$(BIN)pytest --cov=$(COV_MODULE) --cov-fail-under=50 --cov-report=term-missing --cov-report=html $(ARGS)
 
 # ==========================================
 # Facade Meta-Targets
