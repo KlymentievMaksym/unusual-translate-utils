@@ -33,13 +33,13 @@ RE_TRANSLATE_CONFIG = RegexBlockConfig(
     pattern=re.compile(
         rf"""
         ^ \s* \# \s* (?:.*? [/\\])? {_SCRIPT_POSITION} \s* \n
-        ^ translate \s+ \w+ \s+ (?P<{DLG_LABEL}>\w+) _ (?P<{DLG_HASH}>\w+): \s* \n
+        ^ translate \s+ \w+ \s+ (?P<{DLG_LABEL}>\w+) _ (?P<{DLG_HASH}>\w+): [ \t]* (?:\#.*)? \n
 
         ^ \s* \# \s* (?:(?P<{DLG_ORIGINAL_CHAR}>\w+) \s+)?
-            "(?P<{DLG_ORIGINAL}>(?:[^"\\]|\\.)*)" \s* $ \n
+            "(?P<{DLG_ORIGINAL}>(?:[^"\\]|\\.)*)" [ \t]* (?:\#.*)? $ \n
 
         ^ \s*        (?:(?P<{DLG_TRANSLATED_CHAR}>\w+) \s+)?
-            "(?P<{DLG_TRANSLATED}>(?:[^"\\]|\\.)*)" \s* $
+            "(?P<{DLG_TRANSLATED}>(?:[^"\\]|\\.)*)" [ \t]* (?:\#.*)? $
         """,
         re.MULTILINE | re.VERBOSE,
     ),
@@ -52,9 +52,8 @@ RE_TRANSLATE_CONFIG = RegexBlockConfig(
 RE_STRINGS_CONFIG = RegexBlockConfig(
     pattern=re.compile(
         rf"""
-        ^ (?P<{STR_INDENT}>[ \t]+) old \s+ {_quoted(STR_ORIGINAL, 1)}
-        \n
-        (?P={STR_INDENT}) new \s+ {_quoted(STR_TRANSLATED, 2)}
+        ^ (?P<{STR_INDENT}>[ \t]+) old \s+ {_quoted(STR_ORIGINAL, 1)} [ \t]* (?:\#[^\n]*)? \r?\n
+        ^ (?P={STR_INDENT}) new \s+ {_quoted(STR_TRANSLATED, 2)} [ \t]* (?:\#[^\n]*)? $
         """,
         re.MULTILINE | re.DOTALL | re.VERBOSE,
     ),

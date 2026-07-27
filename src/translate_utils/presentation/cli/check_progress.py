@@ -73,7 +73,7 @@ def check_translation_progress() -> None:
     if translation_stats.failed_files:
         LOGGER.warning(f"Encountered errors in {len(translation_stats.failed_files)} files:")
         for file_name, error_message in translation_stats.failed_files.items():
-            LOGGER.warning(f"  - {file_name}: {error_message}")
+            LOGGER.warning(f" - {file_name}: {error_message}")
 
     if args.update_readme is not None:
         generated_table = ProgressMarkdownReport(progress_data).generate()

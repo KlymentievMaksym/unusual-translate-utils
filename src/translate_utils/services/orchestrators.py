@@ -47,8 +47,11 @@ class BatchProgressOrchestrator:
                     LOGGER.error(f"Worker failed on {filepath.name}", exc_info=True)
                     failed_files[filepath.name] = str(e)
 
+        sorted_file_details = dict(sorted(file_details.items()))
+        sorted_failed_files = dict(sorted(failed_files.items()))
+
         return TranslationStats(
-            file_details=file_details,
+            file_details=sorted_file_details,
             global_total=global_total,
-            failed_files=failed_files
+            failed_files=sorted_failed_files
         )
