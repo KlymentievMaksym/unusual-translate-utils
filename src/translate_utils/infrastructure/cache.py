@@ -22,12 +22,12 @@ def multiprocess_cache(shared_dict: DictProxy) -> Callable:
         @functools.wraps(func)
         def wrapper(filepath: str | Path, *args, **kwargs) -> str:
             path_str = str(filepath)
-            
+
             # Check shared memory proxy
             if path_str not in shared_dict:
                 # Cache miss: execute function and store result in IPC dict
                 shared_dict[path_str] = func(filepath, *args, **kwargs)
-                
+
             return shared_dict[path_str]
         return wrapper
     return decorator

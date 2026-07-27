@@ -16,7 +16,12 @@ LOGGER = setup_logging("CleanupRepeats")
 def cleanup_repeats():
     args = cleanup_repeats_parse_args()
     if not args.is_suitable_clean_method():
-        LOGGER.warning(f"Clean method {args.clean_method} is not in {list(AVAILABLE_METHODS.keys())}, defaulting to 'only_comment'...")
+        available_methods_str = ", ".join(AVAILABLE_METHODS)
+        LOGGER.warning(
+            f"Clean method '{args.clean_method}' is not supported. "
+            f"Available methods: [{available_methods_str}]. "
+            f"Defaulting to '{CleanMethod.ONLY_COMMENT}'..."
+        )
 
     clean_method: CleanStrategy = AVAILABLE_METHODS.get(
         args.clean_method,

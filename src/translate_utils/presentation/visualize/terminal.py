@@ -58,12 +58,22 @@ class DialogueTerminalReport(BaseTerminalReport[DialogueReportData]):
         for label, data in itertools.islice(self._data.dialogues.items(), self._data.limit):
             original_char = data.original_character or "-"
             translation_char = data.translation_character or "-"
-            table.add_row(label, original_char, translation_char, truncate(data.original_text, 40), truncate(data.translation_text, 40))
+            table.add_row(
+                label,
+                original_char,
+                translation_char,
+                truncate(data.original_text, 40),
+                truncate(data.translation_text, 40)
+            )
 
 class StringTerminalReport(BaseTerminalReport[StringReportData]):
     """Renders the parsed UI strings as a Rich table in the terminal."""
     def _create_empty_table(self) -> Table:
-        table = Table(title="Parsed UI Strings", show_header=True, header_style="bold magenta")
+        table = Table(
+            title="Parsed UI Strings",
+            show_header=True,
+            header_style="bold magenta"
+        )
 
         table.add_column("Original String", style="yellow")
         table.add_column("New String", style="blue")
@@ -77,7 +87,11 @@ class StringTerminalReport(BaseTerminalReport[StringReportData]):
 class ProgressTerminalReport(BaseTerminalReport[ProgressReportData]):
     """Renders the translation progress as a Rich table in the terminal."""
     def _create_empty_table(self) -> Table:
-        table = Table(title="Translation Progress Report", show_header=True, header_style="bold magenta")
+        table = Table(
+            title="Translation Progress Report",
+            show_header=True,
+            header_style="bold magenta"
+        )
 
         table.add_column("File Name", style="cyan")
         table.add_column("Statistics (Total)", justify="right", style="white")
@@ -89,20 +103,31 @@ class ProgressTerminalReport(BaseTerminalReport[ProgressReportData]):
 
     def _populate_table_rows(self, table: Table) -> None:
         for (filename, translation_status) in self._data.records.items():
-            total_stats_str = f"{translation_status.total.translated:>6} / {translation_status.total.total:>6}"
-            dialogues_stats_str = f"{translation_status.dialogues.translated:>6} / {translation_status.dialogues.total:>6}"
-            strings_stats_str = f"{translation_status.strings.translated:>6} / {translation_status.strings.total:>6}"
-            pct_str = f"{translation_status.total.percentage:>6.2f}%"
+            total = translation_status.total
+            dialogues = translation_status.dialogues
+            strings = translation_status.strings
 
-            pct_color = get_color_gradient(translation_status.total.percentage)
-            table.add_row(filename, total_stats_str, dialogues_stats_str, strings_stats_str, f"[{pct_color}]{pct_str}[/{pct_color}]")
+            total_stats_str =  f"{total.translated:>6} / {total.total:>6}"
+            dialogues_stats_str = f"{dialogues.translated:>6} / {dialogues.total:>6}"
+            strings_stats_str = f"{strings.translated:>6} / {strings.total:>6}"
+            pct_str = f"{total.percentage:>6.2f}%"
 
-        if not self._data.translation_stats.global_total.is_empty:
+            pct_color = get_color_gradient(total.percentage)
+            table.add_row(
+                filename,
+                total_stats_str,
+                dialogues_stats_str,
+                strings_stats_str,
+                f"[{pct_color}]{pct_str}[/{pct_color}]"
+            )
+
+        global_total = self._data.translation_stats.global_total
+        if not global_total.is_empty:
             table.add_section()
             table.add_row(
                 "[bold]GLOBAL TOTAL[/bold]",
-                f"[bold]{self._data.translation_stats.global_total.translated:>6} / {self._data.translation_stats.global_total.total:>6}[/bold]",
+                f"[bold]{global_total.translated:>6} / {global_total.total:>6}[/bold]",
                 "[bold]-[/bold]",
                 "[bold]-[/bold]",
-                f"[bold cyan]{self._data.translation_stats.global_total.percentage:>6.2f}%[/bold cyan]"
+                f"[bold cyan]{global_total.percentage:>6.2f}%[/bold cyan]"
             )

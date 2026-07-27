@@ -71,7 +71,7 @@ class StringMarkdownReport(BaseMarkdownReport[StringReportData]):
     ]
     def _get_rows(self) -> list[list[str]]:
         return [
-            [truncate(old, 50), truncate(new, 50)] 
+            [truncate(old, 50), truncate(new, 50)]
             for old, new in itertools.islice(self._data.ui_strings.items(), self._data.limit)
         ]
 
@@ -88,20 +88,32 @@ class ProgressMarkdownReport(BaseMarkdownReport[ProgressReportData]):
         rows = []
 
         for (filename, translation_status) in self._data.records.items():
+            total = translation_status.total
+            dialogues = translation_status.dialogues
+            strings = translation_status.strings
 
-            total_stats_str = f"{translation_status.total.translated:>6} / {translation_status.total.total:>6}"
-            dialogues_stats_str = f"{translation_status.dialogues.translated:>6} / {translation_status.dialogues.total:>6}"
-            strings_stats_str = f"{translation_status.strings.translated:>6} / {translation_status.strings.total:>6}"
+            total_stats_str = f"{total.translated:>6} / {total.total:>6}"
+            dialogues_stats_str = f"{dialogues.translated:>6} / {dialogues.total:>6}"
+            strings_stats_str = f"{strings.translated:>6} / {strings.total:>6}"
 
-            rows.append([filename, total_stats_str, dialogues_stats_str, strings_stats_str, f"{translation_status.total.percentage:.2f}%"])
+            rows.append(
+                [
+                    filename,
+                    total_stats_str,
+                    dialogues_stats_str,
+                    strings_stats_str,
+                    f"{total.percentage:.2f}%"
+                ]
+            )
 
-        if not self._data.translation_stats.global_total.is_empty:
+        global_total = self._data.translation_stats.global_total
+        if not global_total.is_empty:
             rows.append([
                 "**GLOBAL TOTAL**",
-                f"**{self._data.translation_stats.global_total.translated} / {self._data.translation_stats.global_total.total}**",
+                f"**{global_total.translated} / {global_total.total}**",
                 "**-**",
                 "**-**",
-                f"**{self._data.translation_stats.global_total.percentage:.2f}%**"]
+                f"**{global_total.percentage:.2f}%**"]
             )
 
         return rows
