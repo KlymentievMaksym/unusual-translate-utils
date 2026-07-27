@@ -15,6 +15,9 @@ class GWTranslateApp(App[None]):
         self.push_screen(MainScreen())
 
 
-if __name__ == "__main__":
+def main() -> None:
     app = GWTranslateApp()
     app.run()
+
+if __name__ == "__main__":
+    main()
