@@ -14,6 +14,7 @@ class NotificationConfig(TypedDict, total=False):
     title: str
     severity: Literal["information", "warning", "error"]
 
+
 TABS_TITLE = "Navigation"
 
 TAB_NOTIFICATIONS: dict[str, NotificationConfig] = {
@@ -38,7 +39,7 @@ TAB_NOTIFICATIONS: dict[str, NotificationConfig] = {
 TAB_ID_FALLBACK: NotificationConfig = {
     "message": "Something not right",
     "title": TABS_TITLE,
-    "severity": "error"
+    "severity": "error",
 }
 
 
