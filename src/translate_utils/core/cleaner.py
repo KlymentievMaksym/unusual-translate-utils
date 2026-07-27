@@ -6,21 +6,17 @@ from translate_utils.core.interfaces import CleanStrategy, MatchExtractorFunc
 
 
 class TranslationCleaner:
-    def __init__(
-            self,
-            pattern: re.Pattern[str],
-            extractor: MatchExtractorFunc
-        ):
+    def __init__(self, pattern: re.Pattern[str], extractor: MatchExtractorFunc):
 
         self._pattern = pattern
         self._extractor = extractor
 
     def clean(
-            self,
-            file_text: str,
-            text_to_position: Mapping[str, Sequence[str]],
-            clean_method: CleanStrategy
-        ) -> CleanResults:
+        self,
+        file_text: str,
+        text_to_position: Mapping[str, Sequence[str]],
+        clean_method: CleanStrategy,
+    ) -> CleanResults:
 
         replaced_count = 0
 
@@ -34,9 +30,7 @@ class TranslationCleaner:
                 script_pos_str = ", ".join(text_to_position[extracted_params.original_text])
 
                 return clean_method(
-                    extracted_params.full_text,
-                    extracted_params.indent,
-                    script_pos_str
+                    extracted_params.full_text, extracted_params.indent, script_pos_str
                 )
 
             return extracted_params.full_text

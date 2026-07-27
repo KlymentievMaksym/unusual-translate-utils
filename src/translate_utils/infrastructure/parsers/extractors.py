@@ -10,6 +10,7 @@ def strings_block_extractor(match: re.Match[str]) -> ExtractorParams:
     """
     return ExtractorParams(match.group(0), match.group("indent"), match.group("old_text"))
 
+
 def translate_block_extractor(match: re.Match[str]) -> ExtractorParams:
     """
     Specific strategy for RE_TRANSLATE_BLOCK.

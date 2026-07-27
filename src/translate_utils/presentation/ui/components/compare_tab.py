@@ -1,5 +1,6 @@
 from textual.app import ComposeResult
-from textual.widgets import Static, Label, Button
+from textual.widgets import Button, Label, Static
+
 
 class CompareTab(Static):
     def compose(self) -> ComposeResult:

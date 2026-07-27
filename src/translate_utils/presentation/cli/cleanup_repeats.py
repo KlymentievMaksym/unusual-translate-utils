@@ -13,7 +13,8 @@ from translate_utils.services.mappers import build_reverse_lookup
 
 LOGGER = setup_logging("CleanupRepeats")
 
-def cleanup_repeats():
+
+def cleanup_repeats() -> None:
     args = cleanup_repeats_parse_args()
     if not args.is_suitable_clean_method():
         available_methods_str = ", ".join(AVAILABLE_METHODS)
@@ -24,8 +25,7 @@ def cleanup_repeats():
         )
 
     clean_method: CleanStrategy = AVAILABLE_METHODS.get(
-        args.clean_method,
-        AVAILABLE_METHODS[CleanMethod.ONLY_COMMENT]
+        args.clean_method, AVAILABLE_METHODS[CleanMethod.ONLY_COMMENT]
     )
 
     cleaner = TranslationCleaner(RE_STRINGS_CONFIG.pattern, strings_block_extractor)
@@ -34,7 +34,7 @@ def cleanup_repeats():
         file_parser=RegexDialogueParser(RE_TRANSLATE_CONFIG),
         file_cleaner=cleaner,
         file_writer=write_renpy_file,
-        mapper=build_reverse_lookup
+        mapper=build_reverse_lookup,
     )
 
     if not args.filepaths:
@@ -46,9 +46,7 @@ def cleanup_repeats():
     for filepath in args.filepaths:
         try:
             clean_service.clean_and_save(
-                filepath=filepath,
-                new_name=args.name,
-                clean_method=clean_method
+                filepath=filepath, new_name=args.name, clean_method=clean_method
             )
             success_count += 1
         except FileError as e:

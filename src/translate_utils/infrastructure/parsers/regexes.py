@@ -3,18 +3,22 @@ from dataclasses import dataclass
 
 _SCRIPT_POSITION = r"(?P<script_position>[^/\\]+\.rpy:\d+)"
 
+
 def _quoted(name: str, n: int) -> str:
     quote_group = r'"""|"'
-    return rf'(?P<quote{n}>{quote_group})(?P<{name}>.*?)(?<!\\)(?P=quote{n})'
+    return rf"(?P<quote{n}>{quote_group})(?P<{name}>.*?)(?<!\\)(?P=quote{n})"
+
 
 RE_TAGS = re.compile(r"\{.*?\}|\[.*?\]")
-RE_WORDS = re.compile(r'\w+')
+RE_WORDS = re.compile(r"\w+")
+
 
 @dataclass(frozen=True, slots=True)
 class RegexBlockConfig:
     pattern: re.Pattern[str]
     original_group: str
     translated_group: str
+
 
 DLG_LABEL = "script_label"
 DLG_HASH = "script_hash"
@@ -44,7 +48,7 @@ RE_TRANSLATE_CONFIG = RegexBlockConfig(
         re.MULTILINE | re.VERBOSE,
     ),
     original_group=DLG_ORIGINAL,
-    translated_group=DLG_TRANSLATED
+    translated_group=DLG_TRANSLATED,
 )
 
 # Guaranteed groups: old_text, new_text
@@ -58,5 +62,5 @@ RE_STRINGS_CONFIG = RegexBlockConfig(
         re.MULTILINE | re.DOTALL | re.VERBOSE,
     ),
     original_group=STR_ORIGINAL,
-    translated_group=STR_TRANSLATED
+    translated_group=STR_TRANSLATED,
 )

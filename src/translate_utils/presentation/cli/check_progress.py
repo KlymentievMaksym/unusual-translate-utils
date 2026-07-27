@@ -1,19 +1,10 @@
 import concurrent.futures
 from pathlib import Path
 
-from translate_utils.core.rules import (
-    HasTargetAlphabetSpec,
-    IsDifferentSpec,
-    IsNotEmptySpec,
-    IsSymbolOnlySpec,
-    TranslationValidator,
-)
 from translate_utils.infrastructure.cache import CachedFileReader
-from translate_utils.infrastructure.counter import RegexProgressCounter
+from translate_utils.infrastructure.factories import create_default_progress_counter
 from translate_utils.infrastructure.io import read_renpy_file
 from translate_utils.infrastructure.logger import setup_logging
-from translate_utils.infrastructure.parsers.processors import RenpyProcessor
-from translate_utils.infrastructure.parsers.regexes import RE_STRINGS_CONFIG, RE_TRANSLATE_CONFIG
 from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_TRANSLATION, gather_extension_files
 from translate_utils.infrastructure.updater import update_readme_progress
 from translate_utils.presentation.cli.args import check_translation_progress_parse_args
@@ -37,25 +28,11 @@ def check_translation_progress() -> None:
 
     file_reader = CachedFileReader(read_renpy_file)
 
-    text_processor = RenpyProcessor()
-    specification = IsNotEmptySpec() & (
-        IsSymbolOnlySpec(text_processor) | (
-            IsDifferentSpec() & HasTargetAlphabetSpec() # & NoMixedAlphabetsSpec(text_processor)
-        )
-    )
-    progress_counter=RegexProgressCounter(
-                validator=TranslationValidator(specification),
-                dialogues_config=RE_TRANSLATE_CONFIG,
-                strings_config=RE_STRINGS_CONFIG
-            )
+    progress_counter = create_default_progress_counter()
 
-    progress_service = ProgressService(
-        file_reader=file_reader,
-        progress_counter=progress_counter
-    )
+    progress_service = ProgressService(file_reader=file_reader, progress_counter=progress_counter)
     orchestrator = BatchProgressOrchestrator(
-        progress_service,
-        lambda: concurrent.futures.ProcessPoolExecutor()
+        progress_service, lambda: concurrent.futures.ThreadPoolExecutor()
     )
 
     rpy_files = gather_extension_files(paths_to_check, "rpy")
@@ -85,6 +62,7 @@ def check_translation_progress() -> None:
             f"GLOBAL DONE: {global_progress.percentage:>6.2f}% "
             f"({global_progress.translated} / {global_progress.total})"
         )
+
 
 if __name__ == "__main__":
     check_translation_progress()

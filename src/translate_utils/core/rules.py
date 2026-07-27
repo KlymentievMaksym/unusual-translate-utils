@@ -11,6 +11,7 @@ class TranslationSpecification(ABC):
     Base class for the Specification pattern.
     Allows chaining business rules using bitwise operators (&, |, ~).
     """
+
     @abstractmethod
     def is_satisfied_by(self, original: str, translated: str) -> bool:
         pass
@@ -32,8 +33,9 @@ class AndSpecification(TranslationSpecification):
         self.right = right
 
     def is_satisfied_by(self, original: str, translated: str) -> bool:
-        return self.left.is_satisfied_by(original, translated) and \
-               self.right.is_satisfied_by(original, translated)
+        return self.left.is_satisfied_by(original, translated) and self.right.is_satisfied_by(
+            original, translated
+        )
 
 
 @final
@@ -43,8 +45,9 @@ class OrSpecification(TranslationSpecification):
         self.right = right
 
     def is_satisfied_by(self, original: str, translated: str) -> bool:
-        return self.left.is_satisfied_by(original, translated) or \
-               self.right.is_satisfied_by(original, translated)
+        return self.left.is_satisfied_by(original, translated) or self.right.is_satisfied_by(
+            original, translated
+        )
 
 
 @final
@@ -55,13 +58,16 @@ class NotSpecification(TranslationSpecification):
     def is_satisfied_by(self, original: str, translated: str) -> bool:
         return not self.spec.is_satisfied_by(original, translated)
 
+
 # ==========================================
 # Concrete Business Rules
 # ==========================================
 
+
 @final
 class IsNotEmptySpec(TranslationSpecification):
     """Checks if the translated string is not empty or just whitespaces."""
+
     def is_satisfied_by(self, original: str, translated: str) -> bool:
         return bool(translated and translated.strip())
 
@@ -69,6 +75,7 @@ class IsNotEmptySpec(TranslationSpecification):
 @final
 class IsDifferentSpec(TranslationSpecification):
     """Checks if the translation actually differs from the original."""
+
     def is_satisfied_by(self, original: str, translated: str) -> bool:
         return original != translated
 
@@ -76,6 +83,7 @@ class IsDifferentSpec(TranslationSpecification):
 @final
 class HasTargetAlphabetSpec(TranslationSpecification):
     """Checks if the translation contains non-ASCII characters (e.g., Cyrillic)."""
+
     def is_satisfied_by(self, original: str, translated: str) -> bool:
         return not translated.isascii()
 
@@ -86,6 +94,7 @@ class IsSymbolOnlySpec(TranslationSpecification):
     Checks if the original string consists entirely of non-alphabetical characters
     (e.g., punctuation, spaces, tags).
     """
+
     def __init__(self, text_processor: TextProcessor) -> None:
         self._processor = text_processor
 
@@ -101,6 +110,7 @@ class NoMixedAlphabetsSpec(TranslationSpecification):
     Catches common typing typos like 'Hellт' or 'Привiт' (with English 'i').
     Ignores structural tags.
     """
+
     def __init__(self, text_processor: TextProcessor) -> None:
         self._processor = text_processor
 
@@ -123,6 +133,7 @@ class NoMixedAlphabetsSpec(TranslationSpecification):
                     return False
 
         return True
+
 
 # ==========================================
 # Usage

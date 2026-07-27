@@ -9,11 +9,8 @@ LOGGER = get_logger(__name__)
 
 class ProgressService:
     def __init__(
-            self,
-            file_reader: ReadStrategy,
-            progress_counter: ProgressCounterFunc
-        ) -> None:
-
+        self, file_reader: ReadStrategy[str], progress_counter: ProgressCounterFunc
+    ) -> None:
         self._file_reader = file_reader
         self._progress_counter = progress_counter
 

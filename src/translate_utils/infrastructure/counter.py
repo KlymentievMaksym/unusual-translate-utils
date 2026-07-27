@@ -5,17 +5,19 @@ from translate_utils.infrastructure.parsers.regexes import RegexBlockConfig
 
 LOGGER = get_logger(__name__)
 
+
 class RegexProgressCounter:
     """
     Implementation of ProgressCounterFunc.
     Counts translation progress using injected regex configurations and validator.
     """
+
     def __init__(
-            self,
-            validator: TranslationValidator,
-            dialogues_config: RegexBlockConfig,
-            strings_config: RegexBlockConfig
-        ) -> None:
+        self,
+        validator: TranslationValidator,
+        dialogues_config: RegexBlockConfig,
+        strings_config: RegexBlockConfig,
+    ) -> None:
 
         self._validator = validator
         self._dialogues_config = dialogues_config
@@ -25,11 +27,7 @@ class RegexProgressCounter:
         dialogues = self._count_block(file_text, self._dialogues_config)
         strings = self._count_block(file_text, self._strings_config)
 
-        progress_summary = FileProgressSummary(
-            dialogues + strings,
-            dialogues,
-            strings
-        )
+        progress_summary = FileProgressSummary(dialogues + strings, dialogues, strings)
 
         return progress_summary
 

@@ -14,11 +14,10 @@ class BatchProgressOrchestrator:
     Orchestrates the batch processing of multiple translation files.
     Hides concurrency and data aggregation mechanics from the presentation layer.
     """
+
     def __init__(
-            self,
-            progress_service: ProgressService,
-            executor_factory: ExecutorFactory | None = None
-        ) -> None:
+        self, progress_service: ProgressService, executor_factory: ExecutorFactory | None = None
+    ) -> None:
 
         self._progress_service = progress_service
         self._executor_factory = executor_factory or concurrent.futures.ThreadPoolExecutor
@@ -53,5 +52,5 @@ class BatchProgressOrchestrator:
         return TranslationStats(
             file_details=sorted_file_details,
             global_total=global_total,
-            failed_files=sorted_failed_files
+            failed_files=sorted_failed_files,
         )

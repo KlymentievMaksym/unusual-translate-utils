@@ -13,15 +13,16 @@ from translate_utils.infrastructure.logger import get_logger
 
 LOGGER = get_logger(__name__)
 
+
 class CleanupService:
     def __init__(
-            self,
-            file_reader: ReadStrategy[str],
-            file_parser: ParseStrategy[dict[str, DialogueLine]],
-            file_cleaner: TranslationCleaner,
-            file_writer: WriteStrategy[str],
-            mapper: ReverseLookupMapper,
-        ) -> None:
+        self,
+        file_reader: ReadStrategy[str],
+        file_parser: ParseStrategy[dict[str, DialogueLine]],
+        file_cleaner: TranslationCleaner,
+        file_writer: WriteStrategy[str],
+        mapper: ReverseLookupMapper,
+    ) -> None:
 
         self._file_reader = file_reader
         self._file_parser = file_parser
@@ -30,11 +31,8 @@ class CleanupService:
         self._mapper = mapper
 
     def clean_and_save(
-            self,
-            filepath: str | Path,
-            clean_method: CleanStrategy,
-            new_name: str | Path | None
-        ) -> CleanResults:
+        self, filepath: str | Path, clean_method: CleanStrategy, new_name: str | Path | None
+    ) -> CleanResults:
 
         file_text = self._file_reader(filepath)
 

@@ -7,13 +7,16 @@ class BaseRegexParser:
     """
     Base class for regex-based parsers to share initialization logic.
     """
+
     def __init__(self, config: RegexBlockConfig) -> None:
         self._config = config
+
 
 class RegexDialogueParser(BaseRegexParser):
     """
     Implementation of ParseStrategy[dict[str, DialogueLine]].
     """
+
     def __call__(self, file_text: str) -> dict[str, DialogueLine]:
         dialogues: dict[str, DialogueLine] = {}
 
@@ -24,10 +27,12 @@ class RegexDialogueParser(BaseRegexParser):
 
         return dialogues
 
+
 class RegexStringParser(BaseRegexParser):
     """
     Implementation of ParseStrategy[dict[str, str]].
     """
+
     def __call__(self, file_text: str) -> dict[str, str]:
         ui_strings: dict[str, str] = {}
 
@@ -38,15 +43,17 @@ class RegexStringParser(BaseRegexParser):
 
         return ui_strings
 
+
 class RegexDialAndStrParser:
     """
     Implementation of ParseStrategy[TranslationsDicts].
     """
+
     def __init__(
-            self,
-            dialogue_parser: ParseStrategy[dict[str, DialogueLine]],
-            string_parser: ParseStrategy[dict[str, str]]
-        ) -> None:
+        self,
+        dialogue_parser: ParseStrategy[dict[str, DialogueLine]],
+        string_parser: ParseStrategy[dict[str, str]],
+    ) -> None:
 
         self._dialogue_parser = dialogue_parser
         self._string_parser = string_parser

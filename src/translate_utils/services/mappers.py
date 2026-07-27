@@ -14,7 +14,4 @@ def build_reverse_lookup(dialogues: Mapping[str, DialogueLine]) -> dict[str, tup
         if data.original_text and data.script_position:
             lookup[data.original_text].append(data.script_position)
 
-    return {
-        text: tuple(positions)
-        for text, positions in lookup.items()
-    }
+    return {text: tuple(positions) for text, positions in lookup.items()}

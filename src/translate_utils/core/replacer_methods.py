@@ -7,11 +7,14 @@ from translate_utils.core.interfaces import CleanStrategy
 def add_comment(text: str, indent: str, comment: str) -> str:
     return f"{indent}# {comment}\n{text}"
 
+
 def only_comment(_text: str, indent: str, comment: str) -> str:
     return f"{indent}# {comment}\n"
 
+
 def empty(_text: str, _indent: str, _comment: str) -> str:
     return ""
+
 
 class CleanMethod(str, Enum):
     ADD_COMMENT = "add_comment"

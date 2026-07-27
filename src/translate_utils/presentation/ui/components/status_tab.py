@@ -1,24 +1,28 @@
+import concurrent.futures
+from pathlib import Path
+from typing import Any
+
 from textual import work
 from textual.app import ComposeResult
-from textual.widgets import Static, Label, Button
 from textual.containers import VerticalScroll
-from pathlib import Path
+from textual.widgets import Button, Static
 
-from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_TRANSLATION
-from translate_utils.presentation.visualize.terminal import ProgressReportData, ProgressTerminalReport
-
-from translate_utils.infrastructure.parser import RpyTranslationParser
+from translate_utils.infrastructure.cache import CachedFileReader
+from translate_utils.infrastructure.factories import create_default_progress_counter
+from translate_utils.infrastructure.io import read_renpy_file
+from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_TRANSLATION, gather_extension_files
+from translate_utils.presentation.visualize.mixins import ProgressReportData
+from translate_utils.presentation.visualize.terminal import ProgressTerminalReport
+from translate_utils.services.orchestrators import BatchProgressOrchestrator
 from translate_utils.services.progress_service import ProgressService
+
 
 class StatusTab(Static):
     def compose(self) -> ComposeResult:
-        # yield Label("Here you can see current translation status", id="status_title")
-
         with VerticalScroll():
             yield Static(id="table_container")
 
         yield Button("Update data", id="btn_refresh_status", variant="primary")
-
 
     def on_mount(self) -> None:
         """Fires when the tab is first loaded onto the screen."""
@@ -47,8 +51,13 @@ class StatusTab(Static):
     @work(thread=True)
     def refresh_data(self, manual: bool = False) -> None:
         """Runs in a background thread so the UI doesn't freeze while parsing files."""
-        parser = RpyTranslationParser()
-        progress_checker = ProgressService(parser)
+        progress_counter = create_default_progress_counter()
+        progress_service = ProgressService(
+            file_reader=CachedFileReader(read_renpy_file), progress_counter=progress_counter
+        )
+        orchestrator = BatchProgressOrchestrator(
+            progress_service, lambda: concurrent.futures.ThreadPoolExecutor()
+        )
 
         current_mtime = self._get_latest_mtime(DEFAULT_DIR_FOR_TRANSLATION)
         if not manual and current_mtime <= self._last_mtime:
@@ -56,17 +65,17 @@ class StatusTab(Static):
 
         self._last_mtime = current_mtime
 
-        def update_ui(content):
+        def update_ui(content: Any) -> None:
             self.query_one("#table_container", Static).update(content)
 
         self.app.call_from_thread(update_ui, "Loading data... Please wait.")
 
-        raw_data = progress_checker.get_raw_translation_data([DEFAULT_DIR_FOR_TRANSLATION])
-        if raw_data is None:
-            return
+        paths_to_check = [DEFAULT_DIR_FOR_TRANSLATION]
+        rpy_files = gather_extension_files(paths_to_check, "rpy")
+        translation_stats = orchestrator.execute(rpy_files)
 
-        file_stats, global_trn, global_tot, diag_prog, str_prog = raw_data
-        rich_table = ProgressTerminalReport(ProgressReportData(file_stats, global_trn, global_tot, diag_prog, str_prog)).generate()
+        progress_data = ProgressReportData(translation_stats)
+        rich_table = ProgressTerminalReport(progress_data).generate()
 
         self.app.call_from_thread(update_ui, rich_table)
 
