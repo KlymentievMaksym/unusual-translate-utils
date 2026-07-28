@@ -23,11 +23,13 @@ test = [
     "pytest",
     "pytest-benchmark",
     "pytest-cov",
+    "factory_boy",
 ]
 check = [
     "ruff",
     "mypy",
     "types-tabulate",
+    "types-factory-boy"
 ]
 
 [project.urls]
