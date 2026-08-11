@@ -61,10 +61,12 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 # E: pycodestyle errors, F: Pyflakes, W: Warnings, I: isort (auto-sort imports)
-select = ["E", "F", "W", "I"]
+# UP: pyupgrade, B: flake8-bugbear (finds bugs), SIM: flake8-simplify
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 
 [tool.mypy]
 python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
+files = ["src", "tests"]

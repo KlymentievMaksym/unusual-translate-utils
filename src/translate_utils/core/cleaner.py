@@ -1,5 +1,5 @@
 import re
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from translate_utils.core.entities import CleanResults
 from translate_utils.core.interfaces import CleanStrategy, MatchExtractorFunc

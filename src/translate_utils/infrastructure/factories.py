@@ -2,14 +2,25 @@ from translate_utils.core.rules import (
     HasTargetAlphabetSpec,
     # NoMixedAlphabetsSpec
     IsDifferentSpec,
-    IsNotEmptySpec,
+    # IsNotEmptySpec,
     IsSymbolOnlySpec,
     TranslationValidator,
 )
 from translate_utils.infrastructure.counter import RegexProgressCounter
+from translate_utils.infrastructure.parser import (
+    RegexDialAndStrParser,
+    RegexDialogueParser,
+    RegexStringParser,
+)
 from translate_utils.infrastructure.parsers.processors import RenpyProcessor
 from translate_utils.infrastructure.parsers.regexes import RE_STRINGS_CONFIG, RE_TRANSLATE_CONFIG
 
+
+def create_default_parser() -> RegexDialAndStrParser:
+    return RegexDialAndStrParser(
+        dialogue_parser=RegexDialogueParser(RE_TRANSLATE_CONFIG),
+        string_parser=RegexStringParser(RE_STRINGS_CONFIG)
+    )
 
 def create_default_validator() -> TranslationValidator:
     """

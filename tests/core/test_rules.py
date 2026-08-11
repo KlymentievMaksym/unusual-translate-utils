@@ -6,9 +6,16 @@ from translate_utils.core.rules import (
     IsNotEmptySpec,
     IsSymbolOnlySpec,
     NoMixedAlphabetsSpec,
-    TranslationValidator,
 )
+from translate_utils.infrastructure.factories import create_default_validator
 from translate_utils.infrastructure.parsers.processors import RenpyProcessor
+
+
+@pytest.fixture
+def text_processor() -> RenpyProcessor:
+    """Provides a reusable instance of RenpyProcessor."""
+    return RenpyProcessor()
+
 
 # ==========================================
 # Tests for individual Specification Rules
@@ -18,7 +25,6 @@ from translate_utils.infrastructure.parsers.processors import RenpyProcessor
 @pytest.mark.parametrize(
     "original, translated, expected",
     [
-        # Using "_" to explicitly document that 'original' is completely ignored by this spec
         ("_", "Привіт", True),
         ("_", "", False),
         ("_", "   ", False),
@@ -70,14 +76,14 @@ def test_has_target_alphabet_spec(original: str, translated: str, expected: bool
         ("_", "Текст {tag_m1xed}", True),
     ],
 )
-def test_no_mixed_alphabets_spec(original: str, translated: str, expected: bool) -> None:
+def test_no_mixed_alphabets_spec(
+    text_processor: RenpyProcessor, original: str, translated: str, expected: bool
+) -> None:
     """Test that individual words do not mix alphabets, ignoring system tags."""
-    text_processor = RenpyProcessor()
     spec = NoMixedAlphabetsSpec(text_processor)
     assert spec.is_satisfied_by(original, translated) is expected
 
 
-# Added missing isolated test for IsSymbolOnlySpec
 @pytest.mark.parametrize(
     "original, translated, expected",
     [
@@ -88,9 +94,10 @@ def test_no_mixed_alphabets_spec(original: str, translated: str, expected: bool)
         ("Hello!{image=corazon}~", "_", False),  # Contains letters alongside a tag
     ],
 )
-def test_is_symbol_only_spec(original: str, translated: str, expected: bool) -> None:
+def test_is_symbol_only_spec(
+    text_processor: RenpyProcessor, original: str, translated: str, expected: bool
+) -> None:
     """Test that the original string consists entirely of symbols, ignoring tags."""
-    text_processor = RenpyProcessor()
     spec = IsSymbolOnlySpec(text_processor)
     assert spec.is_satisfied_by(original, translated) is expected
 
@@ -124,6 +131,18 @@ def test_is_symbol_only_spec(original: str, translated: str, expected: bool) -> 
             False,
             id="Fails IsDifferentSpec (Untranslated)",
         ),
+        pytest.param(
+            "~~{image=/bg/icons/heart_text.png}{image=/bg/icons/heart_text.png}",
+            "~~{image=/bg/icons/heart_text.png}{image=/bg/icons/heart_text.png}",
+            True,
+            id="No Text, only symbols, tag kept",
+        ),
+        pytest.param(
+            "old:1783157112.3502007_1",
+            "new:1783157112.3502007_1",
+            False,
+            id="Fails HasTargetAlphabetSpec",
+        ),
         # pytest.param(
         #     "Hello!{image=corazon}~",
         #     "Hellт!{image=corazon}~",
@@ -137,13 +156,8 @@ def test_check_is_translated_facade(original: str, translated: str, expected: bo
     Integration test for the facade function.
     Ensures that all combined rules (VALID_TRANSLATION_SPEC) work together correctly.
     """
-    text_processor = RenpyProcessor()
-    specification = IsNotEmptySpec() & (
-        IsSymbolOnlySpec(text_processor)
-        | (
-            IsDifferentSpec() & HasTargetAlphabetSpec()  # & NoMixedAlphabetsSpec(text_processor)
-        )
-    )
-    validator = TranslationValidator(specification)
+    validator = create_default_validator()
+
     result = validator.check_is_translated(original, translated)
+
     assert result is expected

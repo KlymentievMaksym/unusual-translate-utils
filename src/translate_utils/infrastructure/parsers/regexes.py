@@ -37,13 +37,13 @@ RE_TRANSLATE_CONFIG = RegexBlockConfig(
     pattern=re.compile(
         rf"""
         ^ \s* \# \s* (?:.*? [/\\])? {_SCRIPT_POSITION} \s* \n
-        ^ translate \s+ \w+ \s+ (?P<{DLG_LABEL}>\w+) _ (?P<{DLG_HASH}>\w+): [ \t]* (?:\#.*)? \n
+        ^ translate \s+ \w+ \s+ (?P<{DLG_LABEL}>\w+) _ (?P<{DLG_HASH}>\w+): .* \n
 
         ^ \s* \# \s* (?:(?P<{DLG_ORIGINAL_CHAR}>\w+) \s+)?
-            "(?P<{DLG_ORIGINAL}>(?:[^"\\]|\\.)*)" [ \t]* (?:\#.*)? $ \n
+            "(?P<{DLG_ORIGINAL}>(?:[^"\\]|\\.)*)" .* \n
 
         ^ \s*        (?:(?P<{DLG_TRANSLATED_CHAR}>\w+) \s+)?
-            "(?P<{DLG_TRANSLATED}>(?:[^"\\]|\\.)*)" [ \t]* (?:\#.*)? $
+            "(?P<{DLG_TRANSLATED}>(?:[^"\\]|\\.)*)" .* $
         """,
         re.MULTILINE | re.VERBOSE,
     ),

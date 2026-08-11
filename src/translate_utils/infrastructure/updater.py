@@ -9,7 +9,7 @@ LOGGER = get_logger(__name__)
 def update_readme_progress(generated_table: str, readme_path: str | Path) -> None:
     readme_path = Path(readme_path)
     if readme_path.exists():
-        with open(readme_path, "r", encoding="utf-8") as f:
+        with open(readme_path, encoding="utf-8") as f:
             content = f.read()
 
         pattern = r"(<!-- PROGRESS_START -->)(.*?)(<!-- PROGRESS_END -->)"

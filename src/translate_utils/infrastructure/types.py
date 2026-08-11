@@ -1,7 +1,9 @@
 import concurrent.futures
-from typing import Callable, ContextManager, TypeVar
+from collections.abc import Callable
+from contextlib import AbstractContextManager
+from typing import TypeVar
 
 T_out = TypeVar("T_out")
 
 
-ExecutorFactory = Callable[[], ContextManager[concurrent.futures.Executor]]
+ExecutorFactory = Callable[[], AbstractContextManager[concurrent.futures.Executor]]

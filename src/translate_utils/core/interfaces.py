@@ -1,6 +1,7 @@
 import re
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping, Protocol, TypeVar
+from typing import Protocol, TypeVar
 
 from translate_utils.core.entities import DialogueLine, ExtractorParams, FileProgressSummary
 
