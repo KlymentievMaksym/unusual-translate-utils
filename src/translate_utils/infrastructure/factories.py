@@ -19,20 +19,18 @@ from translate_utils.infrastructure.parsers.regexes import RE_STRINGS_CONFIG, RE
 def create_default_parser() -> RegexDialAndStrParser:
     return RegexDialAndStrParser(
         dialogue_parser=RegexDialogueParser(RE_TRANSLATE_CONFIG),
-        string_parser=RegexStringParser(RE_STRINGS_CONFIG)
+        string_parser=RegexStringParser(RE_STRINGS_CONFIG),
     )
+
 
 def create_default_validator() -> TranslationValidator:
     """
     Factory function to assemble and configure the default TranslationValidator.
     """
     text_processor = RenpyProcessor()
-    specification = (
-        IsSymbolOnlySpec(text_processor)
-        | (
-            IsDifferentSpec() & HasTargetAlphabetSpec()
-            # IsNotEmptySpec() & NoMixedAlphabetsSpec(text_processor)
-        )
+    specification = IsSymbolOnlySpec(text_processor) | (
+        IsDifferentSpec() & HasTargetAlphabetSpec()
+        # IsNotEmptySpec() & NoMixedAlphabetsSpec(text_processor)
     )
     validator = TranslationValidator(specification)
 

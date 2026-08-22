@@ -15,6 +15,7 @@ LOGGER = setup_logging("CleanupRepeats")
 
 
 def cleanup_repeats() -> None:
+    LOGGER.info("Starting cleanup process...")
     args = cleanup_repeats_parse_args()
     if not args.is_suitable_clean_method():
         available_methods_str = ", ".join(AVAILABLE_METHODS)

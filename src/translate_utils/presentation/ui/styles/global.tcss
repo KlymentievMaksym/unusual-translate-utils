@@ -1,0 +1,37 @@
+#main_container {
+    height: 100%;
+    padding: 1;
+}
+
+#tabs {
+    border: solid $accent 90%;
+}
+
+.tabs {
+    border: solid $accent 70%;
+    background: $surface;
+}
+
+ActionPanel {
+    width: 100%;
+    height: 100%;
+}
+
+TabPane Label {
+    padding: 1;
+    margin-bottom: 1;
+    background: $boost;
+    border: solid $accent 50%;
+    width: 100%;
+    text-align: center;
+}
+
+StatusTab #table_container {
+    border: solid $accent 50%;
+    content-align: center middle;
+}
+
+StatusTab #btn_refresh_status {
+    width: 100%;
+    margin-top: 1;
+}

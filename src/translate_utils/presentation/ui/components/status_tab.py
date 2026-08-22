@@ -5,7 +5,7 @@ from typing import Any
 from textual import work
 from textual.app import ComposeResult
 from textual.containers import VerticalScroll
-from textual.widgets import Button, Static
+from textual.widgets import Button, Label, Static
 
 from translate_utils.infrastructure.cache import CachedFileReader
 from translate_utils.infrastructure.factories import create_default_progress_counter
@@ -19,6 +19,8 @@ from translate_utils.services.progress_service import ProgressService
 
 class StatusTab(Static):
     def compose(self) -> ComposeResult:
+        yield Label("Translation status", id="status_title")
+
         with VerticalScroll():
             yield Static(id="table_container")
 

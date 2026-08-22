@@ -15,13 +15,14 @@ from translate_utils.infrastructure.parsers.regexes import (
 # Tests for Helper Functions
 # ==========================================
 
+
 @pytest.mark.parametrize(
     "text, expected",
     [
         ('"""Multiple lines\ntext"""', "Multiple lines\ntext"),
         ('"Single line"', "Single line"),
         ('"""Mixed "quotes" inside"""', 'Mixed "quotes" inside'),
-    ]
+    ],
 )
 def test_quoted_helper(text: str, expected: str) -> None:
     """Test that the _quoted function correctly captures text inside single or triple quotes."""
@@ -32,16 +33,18 @@ def test_quoted_helper(text: str, expected: str) -> None:
     assert match is not None
     assert match.group("my_group") == expected
 
+
 # ==========================================
 # Tests for Dialogue Translation Block Regex
 # ==========================================
+
 
 @pytest.mark.parametrize(
     "dialogue_block, expected_groups",
     [
         pytest.param(
-            '# game/script.rpy:15\n'
-            'translate ukrainian start_1a2b3c4d:\n'
+            "# game/script.rpy:15\n"
+            "translate ukrainian start_1a2b3c4d:\n"
             '    # e "Hello, world!"\n'
             '    e "Привіт, світе!"',
             {
@@ -51,13 +54,13 @@ def test_quoted_helper(text: str, expected: str) -> None:
                 "original_character": "e",
                 "original_text": "Hello, world!",
                 "translation_character": "e",
-                "translation_text": "Привіт, світе!"
+                "translation_text": "Привіт, світе!",
             },
-            id="Valid dialogue block with character names"
+            id="Valid dialogue block with character names",
         ),
         pytest.param(
-            '# game/scripts/main.rpy:42\n'
-            'translate english no_char_ff9900:\n'
+            "# game/scripts/main.rpy:42\n"
+            "translate english no_char_ff9900:\n"
             '    # "Just a narration text." (styles) # comment\n'
             '    "Просто текст автора." (styles) # comment\n'
             '    # "Test." (styls) # coment',
@@ -68,13 +71,13 @@ def test_quoted_helper(text: str, expected: str) -> None:
                 "original_character": None,
                 "original_text": "Just a narration text.",
                 "translation_character": None,
-                "translation_text": "Просто текст автора."
+                "translation_text": "Просто текст автора.",
             },
-            id="Valid dialogue block without character names, also with styles and comments"
+            id="Valid dialogue block without character names, also with styles and comments",
         ),
         pytest.param(
-            '# folder/subfolder/file.rpy:999\n'
-            'translate esp char_esc_123456:\n'
+            "# folder/subfolder/file.rpy:999\n"
+            "translate esp char_esc_123456:\n"
             '    # mc "I said \\"Hello\\"!"\n'
             '    mc "Я сказав \\"Привіт\\"!"',
             {
@@ -84,13 +87,13 @@ def test_quoted_helper(text: str, expected: str) -> None:
                 "original_character": "mc",
                 "original_text": 'I said \\"Hello\\"!',
                 "translation_character": "mc",
-                "translation_text": 'Я сказав \\"Привіт\\"!'
+                "translation_text": 'Я сказав \\"Привіт\\"!',
             },
-            id="Valid dialogue block with escaped quotes"
+            id="Valid dialogue block with escaped quotes",
         ),
-    ]
+    ],
 )
-def test_re_translate_config_matches(dialogue_block: str, expected_groups: dict) -> None:
+def test_re_translate_config_matches(dialogue_block: str, expected_groups: dict[str, str]) -> None:
     """Test that the RE_TRANSLATE_CONFIG successfully parses valid Ren'Py dialogue blocks."""
     match = RE_TRANSLATE_CONFIG.pattern.search(dialogue_block)
 
@@ -104,46 +107,45 @@ def test_re_translate_config_matches(dialogue_block: str, expected_groups: dict)
 def test_re_translate_config_fails_on_invalid_format() -> None:
     """Test that invalid blocks are ignored."""
     invalid_block = (
-        '# Missing script position\n'
-        'translate ukrainian start_hash:\n'
+        "# Missing script position\n"
+        "translate ukrainian start_hash:\n"
         '    # e "Hello"\n'
         '    e "Привіт"\n'
     )
     match = RE_TRANSLATE_CONFIG.pattern.search(invalid_block)
     assert match is None
 
+
 # ==========================================
 # Tests for Strings Translation Block Regex
 # ==========================================
+
 
 @pytest.mark.parametrize(
     "strings_block, expected_old, expected_new, expected_indent",
     [
         pytest.param(
-            '    old "Start"\n'
-            '    new "Початок"',
+            '    old "Start"\n    new "Початок"',
             "Start",
             "Початок",
             "    ",
-            id="Standard double-quote strings"
+            id="Standard double-quote strings",
         ),
         pytest.param(
-            '\told """Long\nStart"""\n'
-            '\tnew """Довгий\nПочаток"""',
+            '\told """Long\nStart"""\n\tnew """Довгий\nПочаток"""',
             "Long\nStart",
             "Довгий\nПочаток",
             "\t",
-            id="Multiline triple-quote strings with tabs"
+            id="Multiline triple-quote strings with tabs",
         ),
         pytest.param(
-            '    old "Settings" # GUI\n'
-            '    new "Налаштування" # GUI',
+            '    old "Settings" # GUI\n    new "Налаштування" # GUI',
             "Settings",
             "Налаштування",
             "    ",
-            id="Strings with inline comments"
+            id="Strings with inline comments",
         ),
-    ]
+    ],
 )
 def test_re_strings_config_matches(
     strings_block: str, expected_old: str, expected_new: str, expected_indent: str

@@ -25,6 +25,14 @@ class CleanStrategy(Protocol):
     def __call__(self, text: str, indent: str, comment: str, /) -> str: ...
 
 
+class CommandStrategy(Protocol):
+    """
+    Strategy for commands.
+    """
+
+    def __call__(self) -> None: ...
+
+
 class ParseStrategy(Protocol[T_out]):
     """Strategy for parsing entire files into specific domain entities."""
 

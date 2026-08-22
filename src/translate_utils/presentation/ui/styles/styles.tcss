@@ -1,0 +1,46 @@
+#main-container {
+    background: $surface;
+    height: 100%;
+    margin: 1;
+    padding: 1;
+}
+
+#top-section {
+    height: 3fr;
+    border-bottom: solid $border;
+}
+
+#bottom-section {
+    height: 4fr;
+}
+
+.container {
+    width: 5fr;
+    padding: 1;
+    border: round $secondary;
+    align: center middle;
+}
+
+#buttons-container Label {
+    border: round $secondary;
+    margin-bottom: 1;
+}
+#buttons-container Button {
+    width: 1fr;
+}
+#buttons-container Input {
+    width: 2fr;
+}
+
+#tree-container Label {
+    border: round $secondary;
+    margin-bottom: 1;
+}
+#diff-tree {
+    border: round $accent;
+}
+
+.text-column {
+    border: round $accent;
+    padding: 1;
+}

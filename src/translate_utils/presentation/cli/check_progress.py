@@ -18,6 +18,7 @@ LOGGER = setup_logging("TranslationProgress")
 
 
 def check_translation_progress() -> None:
+    LOGGER.info("Checking translation status...")
     args = check_translation_progress_parse_args()
 
     if not args.filepaths:

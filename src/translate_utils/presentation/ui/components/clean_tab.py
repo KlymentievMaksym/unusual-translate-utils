@@ -64,10 +64,9 @@ class CleanTab(Static):
             self.open_file_explorer()
         elif event.button.id == "btn_run_clean":
             self.prepare_and_run_cleaning()
-        elif event.button.id == "btn_vscode":
-            if self.cleaned_file_path:
-                subprocess.Popen(["code.cmd", self.cleaned_file_path])
-                self.notify(f"Opened {Path(self.cleaned_file_path).name} in VS Code!")
+        elif event.button.id == "btn_vscode" and self.cleaned_file_path:
+            subprocess.Popen(["code.cmd", self.cleaned_file_path])
+            self.notify(f"Opened {Path(self.cleaned_file_path).name} in VS Code!")
 
     @work(thread=True)
     def open_file_explorer(self) -> None:
