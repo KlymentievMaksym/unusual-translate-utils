@@ -10,5 +10,5 @@ def save_active_tab(tab_id: str) -> None:
 
 def load_active_tab() -> str:
     settings = read_json_file(DEFAULT_SETTINGS_FILE)
-    active_tab: str = settings.get("active_tab", "Get Tab Error")
+    active_tab: str = settings.get("active_tab", "tab_status")
     return active_tab

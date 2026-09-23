@@ -101,7 +101,7 @@ class CleanTab(Static):
         if overwrite:
             final_output_path = original_path
         else:
-            save_dir = Path(out_dir) or original_path.parent
+            save_dir = Path(out_dir) if out_dir else original_path.parent
             save_name = out_name or f"{original_path.stem}_cleaned{original_path.suffix}"
             final_output_path = save_dir / save_name
 

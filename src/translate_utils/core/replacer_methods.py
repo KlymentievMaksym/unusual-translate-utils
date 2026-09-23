@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Final
 
 from translate_utils.core.interfaces import CleanStrategy
@@ -16,7 +16,7 @@ def empty(_text: str, _indent: str, _comment: str) -> str:
     return ""
 
 
-class CleanMethod(str, Enum):
+class CleanMethod(StrEnum):
     ADD_COMMENT = "add_comment"
     ONLY_COMMENT = "only_comment"
     EMPTY = "empty"

@@ -1,5 +1,6 @@
-import pathlib
+import difflib
 import tkinter as tk
+from pathlib import Path
 from tkinter import filedialog
 from typing import Any
 
@@ -28,7 +29,6 @@ class CompareTreeApp(App[None]):
     _inpt_f = _inpt + _dir_f
     _inpt_s = _inpt + _dir_s
 
-    # Додамо ініціалізацію сервісу (у реальному коді це краще робити через Dependency Injection)
     def __init__(self, compare_service: CompareService | None = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.compare_service = compare_service
@@ -144,21 +144,18 @@ class CompareTreeApp(App[None]):
         text_file1 = self.query_one("#text-file1", TextArea)
         text_file2 = self.query_one("#text-file2", TextArea)
 
-        # Конструюємо повні шляхи для відображення оригіналів
-        path1 = pathlib.Path(dir1) / selected_file
-        path2 = pathlib.Path(dir2) / selected_file
+        path1 = Path(dir1) / selected_file
+        path2 = Path(dir2) / selected_file
 
-        # Читаємо файл 1 (якщо існує)
         if path1.exists():
-            text_file1.text = read_renpy_file(str(path1))
+            text_file1.text = "text"
         else:
-            text_file1.text = "Файл відсутній у Directory 1 (Видалено)"
+            text_file1.text = "File not exists in Directory 1 (Deleted)"
 
-        # Читаємо файл 2 (якщо існує)
         if path2.exists():
-            text_file2.text = read_renpy_file(str(path2))
+            text_file2.text = "text"
         else:
-            text_file2.text = "Файл відсутній у Directory 2 (Видалено)"
+            text_file2.text = "File not exists in Directory 2 (Deleted)"
 
     def check_if_dir_selected(self) -> None:
         button = self.query_one(f"#{self._btn_compare}", Button)
@@ -186,5 +183,11 @@ class CompareTreeApp(App[None]):
 
 
 if __name__ == "__main__":
-    app = CompareTreeApp(CompareService(create_default_parser()))
+    app = CompareTreeApp(
+        CompareService(
+            file_reader=,
+            file_parser=create_default_parser(),
+            file_cleaner=
+        )
+    )
     app.run()

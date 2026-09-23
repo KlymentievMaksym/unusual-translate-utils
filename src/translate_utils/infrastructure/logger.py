@@ -5,10 +5,9 @@ from datetime import datetime
 from translate_utils.infrastructure.log_cleaner import cleanup_old_logs
 from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_LOGS
 
-sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
-
 
 def setup_logging(command_name: str) -> logging.Logger:
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
     cleanup_old_logs(DEFAULT_DIR_FOR_LOGS, max_files=10)
 
     curr_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")

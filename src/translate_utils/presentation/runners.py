@@ -20,6 +20,13 @@ def run_clean() -> None:
     cleanup_repeats()
 
 
+def run_compare() -> None:
+    """Executes the compare script."""
+    from translate_utils.presentation.cli.compare_dirs import compare_dirs
+
+    compare_dirs()
+
+
 def run_status() -> None:
     """Executes the translation progress check script."""
     from translate_utils.presentation.cli.check_progress import check_translation_progress
@@ -35,6 +42,7 @@ class Command(Enum):
 
     APP = ("app", run_app, "Run an app")
     CLEAN = ("clean", run_clean, "Run clean from repeats for file, files or directory")
+    COMPARE = ("compare", run_compare, "Run compare for directories")
     STATUS = ("status", run_status, "Run status of translation for file, files or directory")
     DEFAULT = APP
 

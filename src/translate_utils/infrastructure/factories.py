@@ -1,8 +1,9 @@
+from translate_utils.core.cleaner import TranslationCleaner
 from translate_utils.core.rules import (
     HasTargetAlphabetSpec,
-    # NoMixedAlphabetsSpec
+    # NoMixedAlphabetsSpec,  # commented for being too strict
     IsDifferentSpec,
-    # IsNotEmptySpec,
+    # IsNotEmptySpec,  # commented for being too strict
     IsSymbolOnlySpec,
     TranslationValidator,
 )
@@ -12,8 +13,16 @@ from translate_utils.infrastructure.parser import (
     RegexDialogueParser,
     RegexStringParser,
 )
+from translate_utils.infrastructure.parsers.extractors import strings_block_extractor
 from translate_utils.infrastructure.parsers.processors import RenpyProcessor
 from translate_utils.infrastructure.parsers.regexes import RE_STRINGS_CONFIG, RE_TRANSLATE_CONFIG
+
+
+def create_default_cleaner() -> TranslationCleaner:
+    return TranslationCleaner(
+        RE_STRINGS_CONFIG.pattern,
+        strings_block_extractor
+    )
 
 
 def create_default_parser() -> RegexDialAndStrParser:
@@ -30,7 +39,7 @@ def create_default_validator() -> TranslationValidator:
     text_processor = RenpyProcessor()
     specification = IsSymbolOnlySpec(text_processor) | (
         IsDifferentSpec() & HasTargetAlphabetSpec()
-        # IsNotEmptySpec() & NoMixedAlphabetsSpec(text_processor)
+        # IsNotEmptySpec() & NoMixedAlphabetsSpec(text_processor)  # commented for being too strict
     )
     validator = TranslationValidator(specification)
 

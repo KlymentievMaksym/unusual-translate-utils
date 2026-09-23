@@ -48,3 +48,16 @@ def write_json_file(filepath: str | Path, content: Any) -> None:
     """Serialize a Python object into JSON and write it to a file"""
     json_string = json.dumps(content, indent=4, ensure_ascii=False)
     _write_file(filepath, json_string, encoding=ENCODING_JSON)
+
+
+def gather_extension_files(paths: list[Path], extension: str = "rpy") -> list[Path]:
+    """
+    Scans provided paths and returns a sorted list of **.extension** files.
+    """
+    rpy_files = []
+    for target_path in paths:
+        if target_path.is_file() and target_path.suffix == f".{extension}":
+            rpy_files.append(target_path)
+        elif target_path.is_dir():
+            rpy_files.extend(target_path.rglob(f"*.{extension}"))
+    return sorted(rpy_files, key=lambda path: path.name)

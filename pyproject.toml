@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "GW-translate"
 dynamic = ["version"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
   {name = "---", email = "---@gmail.com"},
 ]
@@ -15,7 +15,9 @@ license = "MIT"
 dependencies = [
     "tabulate",
     "rich",
-    "textual"
+    "textual",
+    
+    "rapidfuzz"
 ]
 
 [project.optional-dependencies]
@@ -41,8 +43,9 @@ Issues = "https://github.com/LagencyUA/GW-translate/issues"
 
 [project.scripts]
 gwt = "translate_utils.main:main"
-gwt-app = "translate_utils.runners:run_app"
+gwt-app = "translate_utils.presentation.runners:run_app"
 gwt-clean = "translate_utils.presentation.runners:run_clean"
+gwt-compare = "translate_utils.presentation.runners:run_compare"
 gwt-status = "translate_utils.presentation.runners:run_status"
 
 [tool.setuptools.packages.find]
@@ -60,7 +63,7 @@ addopts = "--strict-markers"
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
@@ -69,7 +72,7 @@ src = ["src", "tests"]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true

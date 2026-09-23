@@ -22,6 +22,7 @@ class CleanupService:
         file_cleaner: TranslationCleaner,
         file_writer: WriteStrategy[str],
         mapper: ReverseLookupMapper,
+        verbose: bool = True,
     ) -> None:
 
         self._file_reader = file_reader
@@ -29,29 +30,52 @@ class CleanupService:
         self._file_cleaner = file_cleaner
         self._file_writer = file_writer
         self._mapper = mapper
+        self._verbose = verbose
 
-    def clean_and_save(
-        self, filepath: str | Path, clean_method: CleanStrategy, new_name: str | Path | None
+    def clean(
+        self, filepath: str | Path, clean_method: CleanStrategy
     ) -> CleanResults:
-
         file_text = self._file_reader(filepath)
 
-        new_filepath: Path = Path(filepath) if new_name is None else Path(new_name)
-        if new_filepath.exists():
-            LOGGER.warning(f"Filepath {new_filepath.absolute()} already exists, overwriting...")
-
         dialogues = self._file_parser(file_text)
-        LOGGER.info(f"Parsed dict length is {len(dialogues)}")
+        if self._verbose:
+            LOGGER.info(f"Parsed dict length is {len(dialogues)}")
 
         text_to_position = self._mapper(dialogues)
 
         clean_results = self._file_cleaner.clean(file_text, text_to_position, clean_method)
-        LOGGER.info(f"Replaced {clean_results.replaced_count} duplicate strings.")
+        if self._verbose:
+            LOGGER.info(f"Replaced {clean_results.replaced_count} duplicate strings.")
+
+        return clean_results
+
+    def save(
+        self, new_filepath: str | Path, clean_results: CleanResults
+    ) -> None:
+        new_filepath = Path(new_filepath)
+
+        if new_filepath.exists():
+            LOGGER.warning(f"Filepath {new_filepath.absolute()} already exists, overwriting...")
 
         self._file_writer(
             filepath=new_filepath,
             content=clean_results.cleaned_text,
         )
-        LOGGER.info(f"Saved cleaned file to: {new_filepath}")
+        if self._verbose:
+            LOGGER.info(f"Saved cleaned file to: {new_filepath}")
+
+    def clean_and_save(
+        self, filepath: str | Path, clean_method: CleanStrategy, new_name: str | Path | None = None
+    ) -> CleanResults:
+
+        clean_results = self.clean(
+            filepath=filepath,
+            clean_method=clean_method
+        )
+
+        self.save(
+            new_filepath=Path(filepath) if new_name is None else Path(new_name),
+            clean_results=clean_results,
+        )
 
         return clean_results
