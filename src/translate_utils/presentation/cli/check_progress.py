@@ -5,7 +5,7 @@ from translate_utils.infrastructure.cache import CachedFileReader
 from translate_utils.infrastructure.factories import create_default_progress_counter
 from translate_utils.infrastructure.io import gather_extension_files, read_renpy_file
 from translate_utils.infrastructure.logger import setup_logging
-from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_TRANSLATION
+from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_TRANSLATION, create_default_dirs
 from translate_utils.infrastructure.updater import update_readme_progress
 from translate_utils.presentation.cli.args import check_translation_progress_parse_args
 from translate_utils.presentation.visualize.markdown import ProgressMarkdownReport
@@ -18,6 +18,7 @@ LOGGER = setup_logging("TranslationProgress")
 
 
 def check_translation_progress() -> None:
+    create_default_dirs()
     LOGGER.info("Checking translation status...")
     args = check_translation_progress_parse_args()
 
