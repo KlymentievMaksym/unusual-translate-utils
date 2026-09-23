@@ -3,10 +3,11 @@ import sys
 from datetime import datetime
 
 from translate_utils.infrastructure.log_cleaner import cleanup_old_logs
-from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_LOGS
+from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_LOGS, create_default_dirs
 
 
 def setup_logging(command_name: str) -> logging.Logger:
+    create_default_dirs()
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
     cleanup_old_logs(DEFAULT_DIR_FOR_LOGS, max_files=10)
 

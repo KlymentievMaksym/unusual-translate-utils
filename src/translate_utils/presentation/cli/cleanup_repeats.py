@@ -8,7 +8,6 @@ from translate_utils.infrastructure.io import read_renpy_file, write_renpy_file
 from translate_utils.infrastructure.logger import setup_logging
 from translate_utils.infrastructure.parser import RegexDialogueParser
 from translate_utils.infrastructure.parsers.regexes import RE_TRANSLATE_CONFIG
-from translate_utils.infrastructure.path import create_default_dirs
 from translate_utils.presentation.cli.args import cleanup_repeats_parse_args
 from translate_utils.services.cleanup_service import CleanupService
 from translate_utils.services.mappers import build_reverse_lookup
@@ -17,7 +16,6 @@ LOGGER = setup_logging("CleanupRepeats")
 
 
 def cleanup_repeats() -> None:
-    create_default_dirs()
     LOGGER.info("Starting cleanup process...")
     args = cleanup_repeats_parse_args()
     if not args.is_suitable_clean_method():

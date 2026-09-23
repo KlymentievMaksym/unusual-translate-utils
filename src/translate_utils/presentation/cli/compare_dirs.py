@@ -8,7 +8,7 @@ from translate_utils.infrastructure.io import read_renpy_file, write_renpy_file
 from translate_utils.infrastructure.logger import setup_logging
 from translate_utils.infrastructure.parser import RegexDialogueParser
 from translate_utils.infrastructure.parsers.regexes import RE_TRANSLATE_CONFIG
-from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_COMPARE_LOGS, create_default_dirs
+from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_COMPARE_LOGS
 from translate_utils.presentation.cli.args import compare_dirs_parse_args
 from translate_utils.services.cleanup_service import CleanupService
 from translate_utils.services.compare_service import CompareService
@@ -20,7 +20,6 @@ LOGGER = setup_logging("CompareDirs")
 
 
 def compare_dirs() -> None:
-    create_default_dirs()
     LOGGER.info("Starting compare process...")
     args = compare_dirs_parse_args()
     if not args.is_suitable_clean_method():
