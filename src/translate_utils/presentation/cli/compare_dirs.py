@@ -129,6 +129,8 @@ Changed: {compare_results.changed}
             # render_diff(filepath, dial_diff, str_diff)
 
             attrs = ["major", "minor", "added", "removed"]
+            show_similarity_in = attrs[:2]
+
             attrs_sep = "____________________________"
             res_attrs_sep = "----------------------------"
 
@@ -144,7 +146,12 @@ Changed: {compare_results.changed}
                 d_result = "\n".join([
                     (
                         f"\n\tKey: {dialogue.key}, "
-                        f"\n\tOld translation: {dialogue.old_translation}, "
+                        + (
+                            f"\n\tSimilarity: {dialogue.similarity:.2f}%, "
+                            if attr in show_similarity_in
+                            else ""
+                        )
+                        + f"\n\tOld translation: {dialogue.old_translation}, "
                         f"\n\tOld text: {dialogue.old_text}, "
                         f"\n\tNew text: {dialogue.new_text}"
                     )
@@ -153,7 +160,12 @@ Changed: {compare_results.changed}
                 s_result = "\n".join([
                     (
                         f"\n\tKey: {string.key}, "
-                        f"\n\tOld text: {string.old_text}, "
+                        + (
+                            f"\n\tSimilarity: {string.similarity:.2f}%, "
+                            if attr in show_similarity_in
+                            else ""
+                        )
+                        + f"\n\tOld text: {string.old_text}, "
                         f"\n\tNew text: {string.new_text}"
                     )
                     for string in strings_changes
