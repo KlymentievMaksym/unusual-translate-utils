@@ -145,27 +145,27 @@ Changed: {compare_results.changed}
 
                 d_result = "\n".join([
                     (
-                        f"\n\tKey: {dialogue.key}, "
+                        f"\n\tKey: {dialogue.key}"
                         + (
-                            f"\n\tSimilarity: {dialogue.similarity:.2f}%, "
+                            f"\n\tSimilarity: {dialogue.similarity:.2f}%"
                             if attr in show_similarity_in
                             else ""
                         )
-                        + f"\n\tOld translation: {dialogue.old_translation}, "
-                        f"\n\tOld text: {dialogue.old_text}, "
+                        + f"\n\tOld translation: {dialogue.old_translation}"
+                        f"\n\tOld text: {dialogue.old_text}"
                         f"\n\tNew text: {dialogue.new_text}"
                     )
                     for dialogue in dialogues_changes
                 ])
                 s_result = "\n".join([
                     (
-                        f"\n\tKey: {string.key}, "
+                        f"\n\tKey: {string.key}"
                         + (
-                            f"\n\tSimilarity: {string.similarity:.2f}%, "
+                            f"\n\tSimilarity: {string.similarity:.2f}%"
                             if attr in show_similarity_in
                             else ""
                         )
-                        + f"\n\tOld text: {string.old_text}, "
+                        + f"\n\tOld text: {string.old_text}"
                         f"\n\tNew text: {string.new_text}"
                     )
                     for string in strings_changes
