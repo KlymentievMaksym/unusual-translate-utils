@@ -23,7 +23,6 @@ DEFAULT_SETTINGS = {"active_tab": "tab_status"}
 
 
 def create_default_dirs():
-    print(DEFAULT_DIR_FOR_LOGS.name)
     DEFAULT_DIR_FOR_LOGS.mkdir(exist_ok=True)
     DEFAULT_DIR_FOR_COMPARE_LOGS.mkdir(exist_ok=True)
     DEFAULT_DIR_FOR_SETTINGS.mkdir(exist_ok=True)
