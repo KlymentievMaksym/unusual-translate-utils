@@ -29,6 +29,8 @@ class CleanupRepeatsArgs(Args):
 class CompareDirsArgs(Args):
     dirs: list[str]
     clean_method: CleanMethod
+    minor_threshold: float
+    match_threshold: float
     auto: bool
 
     def is_suitable_clean_method(self) -> bool:
@@ -73,6 +75,18 @@ def compare_dirs_parse_args() -> CompareDirsArgs:
         type=str,
         default="only_comment",
         help=f"Clean method, available is {list(AVAILABLE_METHODS.keys())}",
+    )
+    parser.add_argument(
+        "--minor_threshold",
+        type=float,
+        default=95.0,
+        help="Threshold for Minor changes",
+    )
+    parser.add_argument(
+        "--match_threshold",
+        type=float,
+        default=60.0,
+        help="Threshold for Major changes",
     )
     parser.add_argument(
         "--auto",

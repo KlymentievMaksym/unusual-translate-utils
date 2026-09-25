@@ -40,10 +40,19 @@ def compare_dirs() -> None:
         dir1=dir1,
         dir2=dir2,
         clean_method=clean_method,
+        minor_threshold=args.minor_threshold,
+        match_threshold=args.match_threshold,
         auto=args.auto
     )
 
-def _compare_dirs(dir1: str, dir2: str, clean_method: CleanStrategy, auto: bool = False) -> None:
+def _compare_dirs(
+        dir1: str,
+        dir2: str,
+        clean_method: CleanStrategy,
+        minor_threshold: float,
+        match_threshold: float,
+        auto: bool = False
+    ) -> None:
     cleaner = create_default_cleaner()
     parser = create_default_parser()
 
@@ -92,8 +101,14 @@ Changed: {compare_results.changed}
             dial_and_str1 = parser(clean_results1.cleaned_text)
             dial_and_str2 = parser(clean_results2.cleaned_text)
 
-            string_diff = StringDiff(major_threshold=60.0, minor_threshold=95.0)
-            dialogue_diff = DialogueSequenceDiff(major_threshold=60.0, minor_threshold=95.0)
+            string_diff = StringDiff(
+                min_match_threshold=match_threshold,
+                minor_threshold=minor_threshold
+            )
+            dialogue_diff = DialogueSequenceDiff(
+                min_match_threshold=match_threshold,
+                minor_threshold=minor_threshold
+            )
 
             old_dialogues = list(dial_and_str1.dialogues.values())
             new_dialogues = list(dial_and_str2.dialogues.values())
@@ -103,11 +118,16 @@ Changed: {compare_results.changed}
 
             if auto:
                 target_path = Path(dir2) / filepath
-                applied_count = merge_service.apply_unchanged_translations(target_path, dial_diff, str_diff)
+                applied_count = merge_service.apply_unchanged_translations(
+                    target_path,
+                    dial_diff,
+                    str_diff
+                )
                 if applied_count > 0:
                     LOGGER.info(f"Successfully applied {applied_count} translations to {filepath}")
 
             # render_diff(filepath, dial_diff, str_diff)
+
             attrs = ["major", "minor", "added", "removed"]
             attrs_sep = "____________________________"
             res_attrs_sep = "----------------------------"

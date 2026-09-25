@@ -2,7 +2,7 @@ import difflib
 from dataclasses import dataclass, field
 from enum import Enum
 
-from rapidfuzz import fuzz
+from rapidfuzz import fuzz, process
 
 from translate_utils.core.entities import DialogueLine
 
@@ -19,7 +19,7 @@ class ChangeSeverity(Enum):
 class ChangeEntry:
     key: str
     severity: ChangeSeverity
-    similarity: float  # 0-100, rapidfuzz scale
+    similarity: float
     old_text: str | None
     new_text: str | None
     old_translation: str | None = None
@@ -51,61 +51,97 @@ class DiffResult:
 
 
 class StringDiff:
-    """
-    Compares two dicts of {key: text} and classifies each key's change
-    by similarity ratio. Use on dialogues (extract original_text/
-    translation_text first) and on ui_strings directly.
-    """
-
-    def __init__(self, major_threshold: float = 60.0, minor_threshold: float = 95.0) -> None:
-        # similarity < major_threshold  -> MAJOR
-        # major_threshold <= sim < minor_threshold -> MINOR
-        # sim >= minor_threshold -> UNCHANGED
-        self._major_threshold = major_threshold
+    def __init__(self, min_match_threshold: float = 60.0, minor_threshold: float = 95.0) -> None:
+        self._min_match_threshold = min_match_threshold
         self._minor_threshold = minor_threshold
 
     def compare(self, old: dict[str, str], new: dict[str, str]) -> DiffResult:
         result = DiffResult()
         old_keys, new_keys = set(old), set(new)
 
-        for key in old_keys - new_keys:
+        exact_keys = old_keys & new_keys
+        for key in exact_keys:
             result.entries.append(
-                ChangeEntry(key, ChangeSeverity.REMOVED, 0.0, old[key], None)
+                ChangeEntry(
+                    key=key,
+                    severity=ChangeSeverity.UNCHANGED,
+                    similarity=100.0,
+                    old_text=key,
+                    new_text=key,
+                    old_translation=old[key],
+                )
             )
 
-        for key in new_keys - old_keys:
-            result.entries.append(
-                ChangeEntry(key, ChangeSeverity.ADDED, 0.0, None, new[key])
-            )
+        remained_old_keys = old_keys - exact_keys
+        remained_new_keys = new_keys - exact_keys
+        remained_new_keys_list = list(remained_new_keys)
 
-        for key in old_keys & new_keys:
-            old_text, new_text = old[key], new[key]
-            if old_text == new_text:
+        for old_key in remained_old_keys:
+            best_match = process.extractOne(old_key, remained_new_keys_list, scorer=fuzz.ratio)
+            if not best_match:
                 result.entries.append(
-                    ChangeEntry(key, ChangeSeverity.UNCHANGED, 100.0, old_text, new_text)
+                    ChangeEntry(
+                        key=old_key,
+                        severity=ChangeSeverity.REMOVED,
+                        similarity=0.0,
+                        old_text=old_key,
+                        new_text=None,
+                        old_translation=old[old_key],
+                    )
                 )
                 continue
 
-            similarity = fuzz.ratio(old_text, new_text)
-            severity = (
-                ChangeSeverity.MAJOR if similarity < self._major_threshold
-                else ChangeSeverity.MINOR if similarity < self._minor_threshold
-                else ChangeSeverity.UNCHANGED
-            )
+            new_key, score, _ = best_match
+
+            if score >= self._minor_threshold:
+                severity = ChangeSeverity.MINOR
+            elif score >= self._min_match_threshold:
+                severity = ChangeSeverity.MAJOR
+            else:
+                severity = None
+
+            if severity is not None:
+                result.entries.append(
+                    ChangeEntry(
+                        key=new_key,
+                        severity=severity,
+                        similarity=score,
+                        old_text=old_key,
+                        new_text=new_key,
+                        old_translation=old[old_key],
+                    )
+                )
+                remained_new_keys_list.remove(new_key)
+            else:
+                result.entries.append(
+                    ChangeEntry(
+                        key=old_key,
+                        severity=ChangeSeverity.REMOVED,
+                        similarity=0.0,
+                        old_text=old_key,
+                        new_text=None,
+                        old_translation=old[old_key],
+                    )
+                )
+
+        for new_key in remained_new_keys_list:
             result.entries.append(
-                ChangeEntry(key, severity, similarity, old_text, new_text)
+                ChangeEntry(
+                    key=new_key,
+                    severity=ChangeSeverity.ADDED,
+                    similarity=0.0,
+                    old_text=None,
+                    new_text=new_key,
+                    old_translation=None,
+                )
             )
 
         return result
 
-class DialogueSequenceDiff:
-    """
-    Compares two lists of DialogueLine preserving file order.
-    Uses SequenceMatcher to find identical blocks and rapidfuzz for changed chunks.
-    """
 
-    def __init__(self, major_threshold: float = 60.0, minor_threshold: float = 95.0) -> None:
-        self._major_threshold = major_threshold
+class DialogueSequenceDiff:
+    def __init__(self, min_match_threshold: float = 60.0, minor_threshold: float = 95.0) -> None:
+        self._min_match_threshold = min_match_threshold
         self._minor_threshold = minor_threshold
 
     def compare(self, old_lines: list[DialogueLine], new_lines: list[DialogueLine]) -> DiffResult:
@@ -114,14 +150,14 @@ class DialogueSequenceDiff:
         matcher = difflib.SequenceMatcher(
             None,
             [line.original_text for line in old_lines],
-            [line.original_text for line in new_lines]
+            [line.original_text for line in new_lines],
         )
 
         for tag, i1, i2, j1, j2 in matcher.get_opcodes():
             old_chunk = old_lines[i1:i2]
             new_chunk = new_lines[j1:j2]
 
-            if tag == 'equal':
+            if tag == "equal":
                 for old_line, new_line in zip(old_chunk, new_chunk, strict=True):
                     key = f"{new_line.script_label}_{new_line.script_hash}"
                     result.entries.append(
@@ -131,10 +167,11 @@ class DialogueSequenceDiff:
                             similarity=100.0,
                             old_text=old_line.original_text,
                             new_text=new_line.original_text,
-                            old_translation=old_line.translation_text
+                            old_translation=old_line.translation_text,
                         )
                     )
-            elif tag == 'delete':
+
+            elif tag == "delete":
                 for line in old_chunk:
                     key = f"{line.script_label}_{line.script_hash}"
                     result.entries.append(
@@ -142,12 +179,13 @@ class DialogueSequenceDiff:
                             key=key,
                             severity=ChangeSeverity.REMOVED,
                             similarity=0.0,
-                            old_text=old_line.original_text,
+                            old_text=line.original_text,
                             new_text=None,
-                            old_translation=old_line.translation_text
+                            old_translation=line.translation_text,
                         )
                     )
-            elif tag == 'insert':
+
+            elif tag == "insert":
                 for line in new_chunk:
                     key = f"{line.script_label}_{line.script_hash}"
                     result.entries.append(
@@ -157,58 +195,81 @@ class DialogueSequenceDiff:
                             similarity=0.0,
                             old_text=None,
                             new_text=line.original_text,
-                            old_translation=None
-                        )
-                    )
-            elif tag == 'replace':
-                min_len = min(len(old_chunk), len(new_chunk))
-                for i in range(min_len):
-                    old_line = old_chunk[i]
-                    new_line = new_chunk[i]
-                    similarity = fuzz.ratio(old_line.original_text, new_line.original_text)
-
-                    severity = (
-                        ChangeSeverity.MAJOR if similarity < self._major_threshold
-                        else ChangeSeverity.MINOR if similarity < self._minor_threshold
-                        else ChangeSeverity.UNCHANGED
-                    )
-                    key = f"{new_line.script_label}_{new_line.script_hash}"
-                    result.entries.append(
-                        ChangeEntry(
-                            key=key,
-                            severity=severity,
-                            similarity=similarity,
-                            old_text=old_line.original_text,
-                            new_text=new_line.original_text,
-                            old_translation=old_line.translation_text
+                            old_translation=None,
                         )
                     )
 
-                if len(old_chunk) > min_len:
-                    for line in old_chunk[min_len:]:
-                        key = f"{line.script_label}_{line.script_hash}"
+            elif tag == "replace":
+                unmatched_new = list(new_chunk)
+
+                for old_line in old_chunk:
+                    best_match = process.extractOne(
+                        query=old_line.original_text,
+                        choices=[line.original_text for line in unmatched_new],
+                        scorer=fuzz.ratio,
+                    )
+
+                    if not best_match:
+                        key = f"{old_line.script_label}_{old_line.script_hash}"
                         result.entries.append(
                             ChangeEntry(
                                 key=key,
                                 severity=ChangeSeverity.REMOVED,
                                 similarity=0.0,
-                                old_text=line.original_text,
+                                old_text=old_line.original_text,
                                 new_text=None,
-                                old_translation=line.translation_text
+                                old_translation=old_line.translation_text,
                             )
                         )
-                elif len(new_chunk) > min_len:
-                    for line in new_chunk[min_len:]:
-                        key = f"{line.script_label}_{line.script_hash}"
+                        continue
+
+                    _, score, best_idx = best_match
+                    matched_new = unmatched_new[best_idx]
+
+                    if score >= self._minor_threshold:
+                        severity = ChangeSeverity.MINOR
+                    elif score >= self._min_match_threshold:
+                        severity = ChangeSeverity.MAJOR
+                    else:
+                        severity = None
+
+                    if severity is not None:
+                        unmatched_new.pop(best_idx)
+                        key = f"{matched_new.script_label}_{matched_new.script_hash}"
                         result.entries.append(
                             ChangeEntry(
                                 key=key,
-                                severity=ChangeSeverity.ADDED,
-                                similarity=0.0,
-                                old_text=None,
-                                new_text=line.original_text,
-                                old_translation=None
+                                severity=severity,
+                                similarity=score,
+                                old_text=old_line.original_text,
+                                new_text=matched_new.original_text,
+                                old_translation=old_line.translation_text,
                             )
                         )
+                    else:
+                        key = f"{old_line.script_label}_{old_line.script_hash}"
+                        result.entries.append(
+                            ChangeEntry(
+                                key=key,
+                                severity=ChangeSeverity.REMOVED,
+                                similarity=0.0,
+                                old_text=old_line.original_text,
+                                new_text=None,
+                                old_translation=old_line.translation_text,
+                            )
+                        )
+
+                for new_line in unmatched_new:
+                    key = f"{new_line.script_label}_{new_line.script_hash}"
+                    result.entries.append(
+                        ChangeEntry(
+                            key=key,
+                            severity=ChangeSeverity.ADDED,
+                            similarity=0.0,
+                            old_text=None,
+                            new_text=new_line.original_text,
+                            old_translation=None,
+                        )
+                    )
 
         return result
