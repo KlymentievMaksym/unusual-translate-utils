@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 
 
 @dataclass(slots=True, frozen=True)
@@ -78,3 +79,26 @@ class TranslationStats:
 class TranslationsDicts:
     dialogues: dict[str, DialogueLine]
     strings: dict[str, str]
+
+
+@dataclass
+class LanguageMatch:
+    key: str
+    message: str
+    rule_id: str
+    replacements: list[str]
+    context_text: str
+
+@dataclass
+class FileCheckResult:
+    filepath: Path
+    matches: list[LanguageMatch] = field(default_factory=list)
+
+@dataclass
+class LanguageCheckResults:
+    file_results: list[FileCheckResult] = field(default_factory=list)
+    failed_files: dict[str, str] = field(default_factory=dict)
+
+    @property
+    def total_issues(self) -> int:
+        return sum(len(res.matches) for res in self.file_results)

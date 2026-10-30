@@ -34,6 +34,13 @@ def run_status() -> None:
     check_translation_progress()
 
 
+def run_check() -> None:
+    """Executes the translation language check script."""
+    from translate_utils.presentation.cli.check_language import check_language
+
+    check_language()
+
+
 class Command(Enum):
     """
     Rich Enum implementing the Strategy pattern.
@@ -44,6 +51,7 @@ class Command(Enum):
     CLEAN = ("clean", run_clean, "Run clean from repeats for file, files or directory")
     COMPARE = ("compare", run_compare, "Run compare for directories")
     STATUS = ("status", run_status, "Run status of translation for file, files or directory")
+    CHECK = ("check", run_check, "Run language check of translation for file, files or directory")
     DEFAULT = APP
 
     def __init__(self, cli_name: str, strategy: CommandStrategy, description: str) -> None:

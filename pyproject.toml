@@ -17,7 +17,9 @@ dependencies = [
     "rich",
     "textual",
     
-    "rapidfuzz"
+    "rapidfuzz",
+
+    "requests"
 ]
 
 [project.optional-dependencies]
@@ -47,6 +49,7 @@ gwt-app = "translate_utils.presentation.runners:run_app"
 gwt-clean = "translate_utils.presentation.runners:run_clean"
 gwt-compare = "translate_utils.presentation.runners:run_compare"
 gwt-status = "translate_utils.presentation.runners:run_status"
+gwt-check = "translate_utils.presentation.runners:run_check"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -42,6 +42,15 @@ class CheckTranslationProgressArgs(Args):
     filepaths: str | None
     update_readme: str | None
 
+@dataclass
+class CheckLanguageArgs:
+    filepaths: list[str]
+    language: str
+    api_url: str
+    api_username: str | None
+    api_key: str | None
+    disabled_rules: list[str] | None
+    max_workers: int
 
 # --- ARGPARSE ---
 def cleanup_repeats_parse_args() -> CleanupRepeatsArgs:
@@ -106,3 +115,57 @@ def check_translation_progress_parse_args() -> CheckTranslationProgressArgs:
     )
     parser.add_argument("--update-readme", type=str, default=None, help="Update README")
     return CheckTranslationProgressArgs.from_namespace(parser.parse_args())
+
+def check_language_parse_args() -> CheckLanguageArgs:
+    parser = argparse.ArgumentParser(
+        description="Check translation grammar and style using LanguageTool API."
+    )
+    parser.add_argument(
+        "filepaths",
+        nargs="*",
+        help="Files or directories to check.",
+    )
+    parser.add_argument(
+        "--language",
+        "-l",
+        default="auto",
+        help="Target language code, such as en-US or uk-UA. Defaults to auto.",
+    )
+    parser.add_argument(
+        "--api_url",
+        default="https://api.languagetool.org/v2",
+        help="LanguageTool API URL",
+    )
+    parser.add_argument(
+        "--api_username",
+        default=None,
+        help="LanguageTool API user username",
+    )
+    parser.add_argument(
+        "--api_key",
+        default=None,
+        help="LanguageTool API key",
+    )
+    parser.add_argument(
+        "--disabled_rules",
+        nargs="*",
+        default=[],
+        help="List of LanguageTool rule IDs to ignore.",
+    )
+    parser.add_argument(
+        "--max_workers",
+        type=int,
+        default=4,
+        help="Number of concurrent threads for API requests.",
+    )
+
+    args = parser.parse_args()
+    return CheckLanguageArgs(
+        filepaths=args.filepaths,
+        language=args.language,
+        api_url=args.api_url,
+        api_username=args.api_username,
+        api_key=args.api_key,
+        disabled_rules=args.disabled_rules,
+        max_workers=args.max_workers,
+    )

@@ -1,9 +1,15 @@
 import concurrent.futures
 from pathlib import Path
 
-from translate_utils.core.entities import FileProgressSummary, Progress, TranslationStats
+from translate_utils.core.entities import (
+    FileProgressSummary,
+    LanguageCheckResults,
+    Progress,
+    TranslationStats,
+)
 from translate_utils.infrastructure.logger import get_logger
 from translate_utils.infrastructure.types import ExecutorFactory
+from translate_utils.services.language_check_service import LanguageCheckService
 from translate_utils.services.progress_service import ProgressService
 
 LOGGER = get_logger(__name__)
@@ -16,7 +22,9 @@ class BatchProgressOrchestrator:
     """
 
     def __init__(
-        self, progress_service: ProgressService, executor_factory: ExecutorFactory | None = None
+        self,
+        progress_service: ProgressService,
+        executor_factory: ExecutorFactory | None = None
     ) -> None:
 
         self._progress_service = progress_service
@@ -54,3 +62,32 @@ class BatchProgressOrchestrator:
             global_total=global_total,
             failed_files=sorted_failed_files,
         )
+
+
+class BatchLanguageCheckOrchestrator:
+    def __init__(
+        self,
+        service: LanguageCheckService,
+        executor_factory: ExecutorFactory | None = None,
+    ) -> None:
+        self.service = service
+        self.executor_factory = executor_factory or concurrent.futures.ThreadPoolExecutor
+
+    def execute(self, files: list[Path]) -> LanguageCheckResults:
+        results = LanguageCheckResults()
+
+        with self.executor_factory() as executor:
+            future_to_file = {
+                executor.submit(self.service.check_file, file_path): file_path
+                for file_path in files
+            }
+
+            for future in concurrent.futures.as_completed(future_to_file):
+                file_path = future_to_file[future]
+                try:
+                    file_result = future.result()
+                    results.file_results.append(file_result)
+                except Exception as exc:
+                    results.failed_files[str(file_path)] = str(exc)
+
+        return results
