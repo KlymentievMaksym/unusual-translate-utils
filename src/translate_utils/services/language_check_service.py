@@ -2,7 +2,9 @@ import concurrent.futures
 from pathlib import Path
 
 from translate_utils.core.entities import FileCheckResult, LanguageMatch, TranslationsDicts
+from translate_utils.core.exceptions import LanguageToolError
 from translate_utils.core.interfaces import ParseStrategy, ReadStrategy, TextProcessor
+from translate_utils.core.rules import TranslationValidator
 from translate_utils.infrastructure.language_tool import LanguageToolClient
 from translate_utils.infrastructure.logger import get_logger
 
@@ -15,12 +17,14 @@ class LanguageCheckService:
         file_reader: ReadStrategy[str],
         file_parser: ParseStrategy[TranslationsDicts],
         language_checker: LanguageToolClient,
+        validator: TranslationValidator | None = None,
         processor: TextProcessor | None = None,
         item_workers: int = 20,
     ) -> None:
         self.file_reader = file_reader
         self.file_parser = file_parser
         self.language_checker = language_checker
+        self.validator = validator
         self.processor = processor
         self.item_workers = item_workers
 
@@ -42,17 +46,23 @@ class LanguageCheckService:
                     for r in match.get("replacements", [])
                     if "value" in r
                 ]
+                context_text = match.get("context", {}).get("text", clean_text)
                 matches.append(
                     LanguageMatch(
                         key=key,
                         message=match.get("message", "Style or grammar error"),
                         rule_id=rule.get("id", "UNKNOWN_RULE"),
-                        replacements=replacements[:5],
-                        context_text=match.get("context", {}).get("text", clean_text),
+                        replacements=replacements,
+                        context_text=context_text,
+                        offset=match.get("offset", 0),
+                        length=match.get("length", len(context_text)),
                     )
                 )
-        except Exception:
-            pass
+        except LanguageToolError as exc:
+            LOGGER.warning(f"LanguageTool error checking key '{key}': {exc}")
+        except Exception as exc:
+            LOGGER.error(f"Unexpected error checking key '{key}': {exc}", exc_info=True)
+
         return matches
 
     def check_file(self, filepath: Path) -> FileCheckResult:
@@ -64,16 +74,18 @@ class LanguageCheckService:
 
         if parsed_data.dialogues:
             for key, dialogue in parsed_data.dialogues.items():
-                text = dialogue.translation_text or dialogue.original_text
-                if text:
-                    items_to_check.append((key, text))
+                original = dialogue.original_text
+                translation = dialogue.translation_text
+                if translation and self.validator.check_is_translated(original, translation):
+                    items_to_check.append((key, translation))
 
         if parsed_data.strings:
             for key, string_val in parsed_data.strings.items():
-                if string_val:
+                if string_val and self.validator.check_is_translated(key, string_val):
                     items_to_check.append((key, string_val))
 
-        LOGGER.info(f"Items to check: {len(items_to_check)}")
+        length = len(items_to_check)
+        LOGGER.info(f"{length} items to check with {self.item_workers} workers, about {length//self.item_workers} item per worker")
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.item_workers) as executor:
             futures = [

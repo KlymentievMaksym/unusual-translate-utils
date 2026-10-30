@@ -88,6 +88,8 @@ class LanguageMatch:
     rule_id: str
     replacements: list[str]
     context_text: str
+    offset: int
+    length: int
 
 @dataclass
 class FileCheckResult:

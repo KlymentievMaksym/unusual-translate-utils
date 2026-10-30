@@ -43,13 +43,14 @@ class CheckTranslationProgressArgs(Args):
     update_readme: str | None
 
 @dataclass
-class CheckLanguageArgs:
+class CheckLanguageArgs(Args):
     filepaths: list[str]
     language: str
     api_url: str
     api_username: str | None
     api_key: str | None
     disabled_rules: list[str] | None
+    dicts: list[str] | None
     max_workers: int
 
 # --- ARGPARSE ---
@@ -153,19 +154,16 @@ def check_language_parse_args() -> CheckLanguageArgs:
         help="List of LanguageTool rule IDs to ignore.",
     )
     parser.add_argument(
+        "--dicts",
+        nargs="*",
+        default=[],
+        help="List of words to ignore.",
+    )
+    parser.add_argument(
         "--max_workers",
         type=int,
         default=4,
         help="Number of concurrent threads for API requests.",
     )
 
-    args = parser.parse_args()
-    return CheckLanguageArgs(
-        filepaths=args.filepaths,
-        language=args.language,
-        api_url=args.api_url,
-        api_username=args.api_username,
-        api_key=args.api_key,
-        disabled_rules=args.disabled_rules,
-        max_workers=args.max_workers,
-    )
+    return CheckLanguageArgs.from_namespace(parser.parse_args())

@@ -162,9 +162,13 @@ class LanguageCheckTerminalReport(BaseTerminalReport[LanguageCheckReportData]):
             )
             table.add_row(
                 filename,
-                truncate(match.key, 20),
+                # truncate(match.key, 20),
+                match.key,
                 match.rule_id,
-                truncate(match.message, 40),
-                truncate(match.context_text, 40),
-                truncate(suggestions_str, 30),
+                match.message,
+                match.context_text,
+                suggestions_str,
+                # truncate(match.message, 40),
+                # truncate(match.context_text, 40),
+                # truncate(suggestions_str, 30),
             )
