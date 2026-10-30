@@ -1,4 +1,5 @@
 import concurrent.futures
+from collections import defaultdict
 from pathlib import Path
 
 from translate_utils.core.entities import FileCheckResult, LanguageMatch, TranslationsDicts
@@ -54,6 +55,7 @@ class LanguageCheckService:
                         rule_id=rule.get("id", "UNKNOWN_RULE"),
                         replacements=replacements,
                         context_text=context_text,
+                        original_text=clean_text,
                         offset=match.get("offset", 0),
                         length=match.get("length", len(context_text)),
                     )
@@ -76,23 +78,30 @@ class LanguageCheckService:
             for key, dialogue in parsed_data.dialogues.items():
                 original = dialogue.original_text
                 translation = dialogue.translation_text
-                if translation and self.validator.check_is_translated(original, translation):
+                if translation and self.validator and self.validator.check_is_translated(original, translation):
                     items_to_check.append((key, translation))
 
         if parsed_data.strings:
             for key, string_val in parsed_data.strings.items():
-                if string_val and self.validator.check_is_translated(key, string_val):
+                if string_val and self.validator and self.validator.check_is_translated(key, string_val):
                     items_to_check.append((key, string_val))
 
         length = len(items_to_check)
         LOGGER.info(f"{length} items to check with {self.item_workers} workers, about {length//self.item_workers} item per worker")
 
+        matches_by_key: defaultdict[str, list[LanguageMatch]] = defaultdict(list)
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.item_workers) as executor:
-            futures = [
-                executor.submit(self._check_single_item, key, text)
-                for key, text in items_to_check
-            ]
-            for future in concurrent.futures.as_completed(futures):
-                result.matches.extend(future.result())
+            future_to_key = {
+                executor.submit(self._check_single_item, key, text): key
+                for key, text in items_to_check[:200]
+            }
+            for future in concurrent.futures.as_completed(future_to_key):
+                item_matches = future.result()
+                if item_matches:
+                    key = future_to_key[future]
+                    matches_by_key[key].extend(item_matches)
+
+        result.matches = dict(matches_by_key)
 
         return result

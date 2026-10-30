@@ -88,13 +88,14 @@ class LanguageMatch:
     rule_id: str
     replacements: list[str]
     context_text: str
+    original_text: str
     offset: int
     length: int
 
 @dataclass
 class FileCheckResult:
     filepath: Path
-    matches: list[LanguageMatch] = field(default_factory=list)
+    matches: dict[str, list[LanguageMatch]] = field(default_factory=dict)
 
 @dataclass
 class LanguageCheckResults:
@@ -104,3 +105,14 @@ class LanguageCheckResults:
     @property
     def total_issues(self) -> int:
         return sum(len(res.matches) for res in self.file_results)
+
+@dataclass(frozen=True, slots=True)
+class ReplacementEntity:
+    global_offset: int
+    word: str
+
+@dataclass(frozen=True, slots=True)
+class RuleEntity:
+    id: str
+    message: str
+

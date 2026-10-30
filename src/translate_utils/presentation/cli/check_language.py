@@ -1,18 +1,30 @@
 import concurrent.futures
+from collections import defaultdict
 from pathlib import Path
 
+from translate_utils.core.entities import ReplacementEntity, RuleEntity
+from translate_utils.core.rules import IsSymbolOnlySpec
 from translate_utils.infrastructure.cache import CachedFileReader
 from translate_utils.infrastructure.factories import create_default_parser, create_default_validator
-from translate_utils.infrastructure.io import gather_extension_files, read_renpy_file, write_renpy_file
+from translate_utils.infrastructure.io import (
+    gather_extension_files,
+    read_renpy_file,
+    write_renpy_file,
+)
 from translate_utils.infrastructure.language_tool import LanguageToolClient
 from translate_utils.infrastructure.logger import setup_logging
 from translate_utils.infrastructure.parsers.processors import RenpyProcessor
-from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_CHECK_LOGS, DEFAULT_DIR_FOR_TRANSLATION, DEFAULT_LANGUAGE_EXCEPTIONS_FILE
+from translate_utils.infrastructure.path import (
+    DEFAULT_DIR_FOR_CHECK_LOGS,
+    DEFAULT_DIR_FOR_TRANSLATION,
+    DEFAULT_LANGUAGE_EXCEPTIONS_FILE,
+)
 from translate_utils.presentation.cli.args import check_language_parse_args
-from translate_utils.presentation.visualize.mixins import LanguageCheckReportData
-from translate_utils.presentation.visualize.terminal import LanguageCheckTerminalReport
 from translate_utils.services.language_check_service import LanguageCheckService
 from translate_utils.services.orchestrators import BatchLanguageCheckOrchestrator
+
+# from translate_utils.presentation.visualize.mixins import LanguageCheckReportData
+# from translate_utils.presentation.visualize.terminal import LanguageCheckTerminalReport
 
 LOGGER = setup_logging("CheckLanguage")
 
@@ -36,7 +48,11 @@ def check_language() -> None:
     LOGGER.info(f"Found {len(rpy_files)} files. Running LanguageTool checks...")
 
     file_reader = CachedFileReader(read_renpy_file)
-    dicts = args.dicts if args.dicts != [] else file_reader(DEFAULT_LANGUAGE_EXCEPTIONS_FILE).splitlines()
+    dicts = (
+        args.dicts
+        if args.dicts != []
+        else file_reader(DEFAULT_LANGUAGE_EXCEPTIONS_FILE).splitlines()
+    )
     LOGGER.info(f"Ignoring words: {dicts}")
 
     parser = create_default_parser()
@@ -49,7 +65,8 @@ def check_language() -> None:
         dicts=dicts,
         max_workers=args.max_workers
     )
-    dicts = list(dct.lower() for dct in dicts)
+    dicts = list(dct.lower() for dct in dicts) if dicts is not None else []
+
     validator = create_default_validator()
 
     check_service = LanguageCheckService(
@@ -77,22 +94,64 @@ def check_language() -> None:
 
     for file_results in results.file_results:
         text = global_separator
-        for match in file_results.matches:
-            flagged_word = match.context_text[match.offset:match.offset+match.length].lower()
-            if flagged_word in dicts:
-                continue
-            
-            text += match.context_text + next_line
+        for key, matches in file_results.matches.items():
+            match = matches[0]
+            text += "Key: " + key + next_line
+            text += local_separator
+            context_text = match.original_text
 
-            underliner = list(" " * len(match.context_text))
-            underliner[match.offset:match.offset+match.length] = '-' * match.length
+            text += context_text + next_line
+
+            replacements: dict[ReplacementEntity, list] = defaultdict(list)
+            rules: dict[ReplacementEntity, RuleEntity] = defaultdict()
+            underliner = list(" " * len(context_text))
+
+            for match in matches:
+
+                offset = match.offset
+
+                flagged_word = match.context_text[offset:offset+match.length].lower()
+                if flagged_word in dicts:
+                    continue
+
+                if (
+                    match.rule_id == "COMMA_PARENTHESIS_WHITESPACE"
+                    and IsSymbolOnlySpec(RenpyProcessor()).is_satisfied_by(flagged_word, "")
+                ):
+                    continue
+
+                global_offset = offset
+
+                replacement_entity = ReplacementEntity(
+                    global_offset=global_offset,
+                    word=flagged_word
+                )
+
+                rule_entity = RuleEntity(
+                    id=match.rule_id,
+                    message=match.message
+                )
+
+                underliner[global_offset:global_offset+match.length] = '-' * match.length
+                replacements[replacement_entity].extend(match.replacements)
+                rules[replacement_entity] = rule_entity
+
             text += "".join(underliner) + next_line
 
-            text += ", ".join(match.replacements) + next_line
             text += local_separator
-            text += "Key: " + match.key + next_line
-            text += "Rule id: " + match.rule_id + next_line
-            text += "Rule message: " + match.message + next_line
+            for (_replacement_entity, _replacement), _rule_entity in zip(
+                replacements.items(),
+                rules.values(),
+                strict=True
+            ):
+                text += (
+                    f"{_replacement_entity.word}:{_replacement_entity.global_offset}: "
+                    f"{', '.join(_replacement)}"
+                ) + next_line
+                text += "Rule id: " + _rule_entity.id + next_line
+                text += "Rule message: " + _rule_entity.message + next_line
+                text += local_separator
+
             text += next_line + global_separator
 
         result_file = Path(file_results.filepath).stem + ".log"
