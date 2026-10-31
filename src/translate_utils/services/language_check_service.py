@@ -103,7 +103,7 @@ class LanguageCheckService:
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.item_workers) as executor:
             future_to_key = {
                 executor.submit(self._check_single_item, key, text): key
-                for key, text in items_to_check[:10]
+                for key, text in items_to_check
             }
             for future in concurrent.futures.as_completed(future_to_key):
                 item_matches = future.result()
