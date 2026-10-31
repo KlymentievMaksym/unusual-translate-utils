@@ -89,8 +89,8 @@ def check_language() -> None:
     LOGGER.info("Check done")
 
     next_line = '\n'
-    global_separator = "=" * 10 + next_line
-    local_separator = "_" * 10 + next_line
+    global_separator = "=" * 60 + next_line
+    local_separator = "_" * 30 + next_line
 
     for file_results in results.file_results:
         text = global_separator
