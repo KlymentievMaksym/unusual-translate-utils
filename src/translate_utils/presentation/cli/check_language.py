@@ -95,29 +95,28 @@ def check_language() -> None:
     for file_results in results.file_results:
         text = global_separator
         for key, matches in file_results.matches.items():
-            match = matches[0]
-            text += "Key: " + key + next_line
-            text += local_separator
-            context_text = match.original_text
-
-            text += context_text + next_line
+            _match = matches[0]
+            context_text = _match.original_text
+            underliner = list(" " * len(context_text))
 
             replacements: dict[ReplacementEntity, list] = defaultdict(list)
             rules: dict[ReplacementEntity, RuleEntity] = defaultdict()
-            underliner = list(" " * len(context_text))
 
-            for match in matches:
+            break_for = [False] * len(matches)
+            for index, match in enumerate(matches):
 
                 offset = match.offset
 
                 flagged_word = match.context_text[offset:offset+match.length].lower()
                 if flagged_word in dicts:
+                    break_for[index] = True
                     continue
 
                 if (
                     match.rule_id == "COMMA_PARENTHESIS_WHITESPACE"
                     and IsSymbolOnlySpec(RenpyProcessor()).is_satisfied_by(flagged_word, "")
                 ):
+                    break_for[index] = True
                     continue
 
                 global_offset = offset
@@ -135,6 +134,14 @@ def check_language() -> None:
                 underliner[global_offset:global_offset+match.length] = '-' * match.length
                 replacements[replacement_entity].extend(match.replacements)
                 rules[replacement_entity] = rule_entity
+
+            if all(break_for):
+                continue
+
+            text += "Key: " + key + next_line
+            text += local_separator
+
+            text += context_text + next_line
 
             text += "".join(underliner) + next_line
 
