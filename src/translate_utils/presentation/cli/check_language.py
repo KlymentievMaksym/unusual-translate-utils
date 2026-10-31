@@ -105,9 +105,10 @@ def check_language() -> None:
             break_for = [False] * len(matches)
             for index, match in enumerate(matches):
 
-                offset = match.offset
+                global_offset = match.offset
 
-                flagged_word = match.context_text[offset:offset+match.length].lower()
+                flagged_word = context_text[global_offset:global_offset+match.length].lower()
+
                 if flagged_word in dicts:
                     break_for[index] = True
                     continue
@@ -118,8 +119,6 @@ def check_language() -> None:
                 ):
                     break_for[index] = True
                     continue
-
-                global_offset = offset
 
                 replacement_entity = ReplacementEntity(
                     global_offset=global_offset,
@@ -146,17 +145,14 @@ def check_language() -> None:
             text += "".join(underliner) + next_line
 
             text += local_separator
-            for (_replacement_entity, _replacement), _rule_entity in zip(
-                replacements.items(),
-                rules.values(),
-                strict=True
-            ):
+            for replacement_entity, replacement in replacements.items():
+                rule_entity = rules[replacement_entity]
                 text += (
-                    f"{_replacement_entity.word}:{_replacement_entity.global_offset}: "
-                    f"{', '.join(_replacement)}"
+                    f"{replacement_entity.word}:{replacement_entity.global_offset}: "
+                    f"{', '.join(replacement)}"
                 ) + next_line
-                text += "Rule id: " + _rule_entity.id + next_line
-                text += "Rule message: " + _rule_entity.message + next_line
+                text += "Rule id: " + rule_entity.id + next_line
+                text += "Rule message: " + rule_entity.message + next_line
                 text += local_separator
 
             text += next_line + global_separator

@@ -28,9 +28,10 @@ class LanguageToolClient:
         self.timeout = timeout
 
         self.session = requests.Session()
+        pool_size = max_workers * max_workers
         adapter = HTTPAdapter(
-            pool_connections=max_workers,
-            pool_maxsize=max_workers,
+            pool_connections=pool_size,
+            pool_maxsize=pool_size,
             max_retries=3
         )
         self.session.mount("http://", adapter)

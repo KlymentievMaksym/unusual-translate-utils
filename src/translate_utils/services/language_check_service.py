@@ -2,6 +2,9 @@ import concurrent.futures
 from collections import defaultdict
 from pathlib import Path
 
+from rich.progress import Progress as RichProgress
+from rich.progress import TaskID    
+
 from translate_utils.core.entities import FileCheckResult, LanguageMatch, TranslationsDicts
 from translate_utils.core.exceptions import LanguageToolError
 from translate_utils.core.interfaces import ParseStrategy, ReadStrategy, TextProcessor
@@ -67,7 +70,7 @@ class LanguageCheckService:
 
         return matches
 
-    def check_file(self, filepath: Path) -> FileCheckResult:
+    def check_file(self, filepath: Path, progress: RichProgress | None = None) -> FileCheckResult:
         content = self.file_reader(filepath)
         parsed_data = self.file_parser(content)
         result = FileCheckResult(filepath=filepath)
@@ -87,20 +90,32 @@ class LanguageCheckService:
                     items_to_check.append((key, string_val))
 
         length = len(items_to_check)
-        LOGGER.info(f"{length} items to check with {self.item_workers} workers, about {length//self.item_workers} item per worker")
+        LOGGER.debug(f"{length} items to check with {self.item_workers} workers, about {length//self.item_workers} item per worker")
 
         matches_by_key: defaultdict[str, list[LanguageMatch]] = defaultdict(list)
+
+        file_task: TaskID | None = None
+        if progress is not None and items_to_check:
+            file_task = progress.add_task(
+                f"[cyan]{filepath.name}", total=len(items_to_check)
+            )
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.item_workers) as executor:
             future_to_key = {
                 executor.submit(self._check_single_item, key, text): key
-                for key, text in items_to_check
+                for key, text in items_to_check[:10]
             }
             for future in concurrent.futures.as_completed(future_to_key):
                 item_matches = future.result()
                 if item_matches:
                     key = future_to_key[future]
                     matches_by_key[key].extend(item_matches)
+
+                if progress is not None and file_task is not None:
+                    progress.advance(file_task)
+
+        if progress is not None and file_task is not None:
+            progress.remove_task(file_task)
 
         result.matches = dict(matches_by_key)
 

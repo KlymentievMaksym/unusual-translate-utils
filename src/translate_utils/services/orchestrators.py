@@ -1,6 +1,18 @@
 import concurrent.futures
 from pathlib import Path
 
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+    TimeRemainingColumn,
+)
+from rich.progress import (
+    Progress as RichProgress,
+)
+
 from translate_utils.core.entities import (
     FileProgressSummary,
     LanguageCheckResults,
@@ -76,18 +88,33 @@ class BatchLanguageCheckOrchestrator:
     def execute(self, files: list[Path]) -> LanguageCheckResults:
         results = LanguageCheckResults()
 
-        with self.executor_factory() as executor:
-            future_to_file = {
-                executor.submit(self.service.check_file, file_path): file_path
-                for file_path in files
-            }
+        with RichProgress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            MofNCompleteColumn(),
+            TimeRemainingColumn(),
+            refresh_per_second=10,
+        ) as progress:
+            overall_task = progress.add_task(
+                "[bold green]Overall Files", total=len(files)
+            )
 
-            for future in concurrent.futures.as_completed(future_to_file):
-                file_path = future_to_file[future]
-                try:
-                    file_result = future.result()
-                    results.file_results.append(file_result)
-                except Exception as exc:
-                    results.failed_files[str(file_path)] = str(exc)
+            with self.executor_factory() as executor:
+                future_to_file = {
+                    executor.submit(self.service.check_file, file_path, progress): file_path
+                    for file_path in files
+                }
+
+                for future in concurrent.futures.as_completed(future_to_file):
+                    file_path = future_to_file[future]
+                    try:
+                        file_result = future.result()
+                        results.file_results.append(file_result)
+                    except Exception as exc:
+                        results.failed_files[str(file_path)] = str(exc)
+                    finally:
+                        progress.advance(overall_task)
 
         return results
