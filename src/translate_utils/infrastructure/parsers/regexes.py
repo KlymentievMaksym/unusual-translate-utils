@@ -9,8 +9,26 @@ def _quoted(name: str, n: int) -> str:
     return rf"(?P<quote{n}>{quote_group})(?P<{name}>.*?)(?<!\\)(?P=quote{n})"
 
 
+RE_SIMPLE_TAGS = re.compile(r"\{.*?\}")
 RE_TAGS = re.compile(r"\{.*?\}|\[.*?\]")
 RE_WORDS = re.compile(r"\w+")
+
+NAME_FORM_MAP = {
+    "default": "КУРВА ПРОПУСТИВ ВІДМІНЮВАННЯ",
+    "nom": "гравець",
+    "gen": "гравця",
+    "dat": "гравцеві",
+    "acc": "гравця",
+    "ins": "гравцем",
+    "loc": "гравці",
+    "voc": "гравцю",
+}
+RE_NAME_FORM = re.compile(r"\[name_form\('(\w+)'\)\]")
+
+def name_form_replacer(match: re.Match) -> str:
+    grammatical_case = match.group(1)
+    word = NAME_FORM_MAP.get(grammatical_case, "гравець")
+    return word
 
 
 @dataclass(frozen=True, slots=True)

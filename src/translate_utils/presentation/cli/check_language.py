@@ -14,6 +14,7 @@ from translate_utils.infrastructure.io import (
 from translate_utils.infrastructure.language_tool import LanguageToolClient
 from translate_utils.infrastructure.logger import setup_logging
 from translate_utils.infrastructure.parsers.processors import RenpyProcessor
+from translate_utils.infrastructure.parsers.regexes import RE_SIMPLE_TAGS
 from translate_utils.infrastructure.path import (
     DEFAULT_DIR_FOR_CHECK_LOGS,
     DEFAULT_DIR_FOR_TRANSLATION,
@@ -73,7 +74,7 @@ def check_language() -> None:
         file_reader=file_reader,
         file_parser=parser,
         language_checker=checker,
-        processor=RenpyProcessor(),
+        processor=RenpyProcessor(RE_strip_tags=RE_SIMPLE_TAGS),
         validator=validator,
         item_workers=args.max_workers
     )

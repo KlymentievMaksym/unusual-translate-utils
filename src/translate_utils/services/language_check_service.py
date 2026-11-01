@@ -3,7 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from rich.progress import Progress as RichProgress
-from rich.progress import TaskID    
+from rich.progress import TaskID
 
 from translate_utils.core.entities import FileCheckResult, LanguageMatch, TranslationsDicts
 from translate_utils.core.exceptions import LanguageToolError
@@ -11,6 +11,11 @@ from translate_utils.core.interfaces import ParseStrategy, ReadStrategy, TextPro
 from translate_utils.core.rules import TranslationValidator
 from translate_utils.infrastructure.language_tool import LanguageToolClient
 from translate_utils.infrastructure.logger import get_logger
+from translate_utils.infrastructure.parsers.regexes import (
+    NAME_FORM_MAP,
+    RE_NAME_FORM,
+    name_form_replacer,
+)
 
 LOGGER = get_logger(__name__)
 
@@ -39,6 +44,15 @@ class LanguageCheckService:
 
         if not clean_text.strip():
             return []
+
+        clean_text = (
+            clean_text
+            .replace("\\n", " ")
+            .replace("\\t", " ")
+            .replace("[[", " [")
+            .replace("[mc]", NAME_FORM_MAP["default"])
+        )
+        clean_text = RE_NAME_FORM.sub(name_form_replacer, clean_text)
 
         matches: list[LanguageMatch] = []
         try:
