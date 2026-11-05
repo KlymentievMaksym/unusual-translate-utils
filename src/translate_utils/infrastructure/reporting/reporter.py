@@ -2,8 +2,8 @@ from collections import defaultdict
 from pathlib import Path
 
 from translate_utils.core.entities import FileCheckResult, ReplacementEntity, RuleEntity
-from translate_utils.infrastructure.io import write_renpy_file
-from translate_utils.infrastructure.logger import get_logger
+from translate_utils.infrastructure.filesystem.io import write_renpy_file
+from translate_utils.infrastructure.logging.logger import get_logger
 
 LOGGER = get_logger(__name__)
 

@@ -2,8 +2,8 @@ import logging
 import sys
 from datetime import datetime
 
-from translate_utils.infrastructure.log_cleaner import cleanup_old_logs
-from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_LOGS, create_default_dirs
+from translate_utils.infrastructure.logging.log_cleaner import cleanup_old_logs
+from translate_utils.infrastructure.filesystem.path import DEFAULT_DIR_FOR_LOGS, create_default_dirs
 
 
 def setup_logging(command_name: str) -> logging.Logger:

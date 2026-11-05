@@ -7,7 +7,7 @@ from translate_utils.core.rules import (
     IsSymbolOnlySpec,
     TranslationValidator,
 )
-from translate_utils.infrastructure.counter import RegexProgressCounter
+from translate_utils.infrastructure.progress.counter import RegexProgressCounter
 from translate_utils.infrastructure.parser import (
     RegexDialAndStrParser,
     RegexDialogueParser,

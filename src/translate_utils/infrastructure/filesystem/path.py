@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from translate_utils.infrastructure.io import write_json_file, write_renpy_file
+from translate_utils.infrastructure.filesystem.io import write_json_file, write_renpy_file
 
 
 def find_project_root(current_path: Path, marker: str = "src") -> Path:

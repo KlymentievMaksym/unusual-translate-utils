@@ -1,5 +1,5 @@
-from translate_utils.infrastructure.io import read_json_file, write_json_file
-from translate_utils.infrastructure.path import DEFAULT_SETTINGS_FILE
+from translate_utils.infrastructure.filesystem.io import read_json_file, write_json_file
+from translate_utils.infrastructure.filesystem.path import DEFAULT_SETTINGS_FILE
 
 
 def save_active_tab(tab_id: str) -> None:
