@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+from typing import TypeVar
 
 from translate_utils.core.replacer_methods import AVAILABLE_METHODS, CleanMethod
+
+TArgs = TypeVar("TArgs", bound="Args")
 
 
 # --- ARGS ---
 @dataclass
 class Args:
     @classmethod
-    def from_namespace(cls, namespace: argparse.Namespace) -> Args:
+    def from_namespace(cls: type[TArgs], namespace: argparse.Namespace) -> TArgs:
         return cls(**vars(namespace))
 
 
