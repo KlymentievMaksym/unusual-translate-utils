@@ -1,0 +1,15 @@
+**/__pycache__
+**/.venv
+**/*.egg-info
+**/*.lock
+**/*.coverage
+
+**/.vscode/**
+
+**/translate_logs
+**/translate_settings
+
+**/game
+**/Goddesses'_Whim
+*.rpyc
+*.rpa
