@@ -11,11 +11,14 @@ from textual.widgets import Button, Checkbox, Input, Label, Select, Static
 from translate_utils.core.cleaner import TranslationCleaner
 from translate_utils.core.interfaces import CleanStrategy
 from translate_utils.core.replacer_methods import AVAILABLE_METHODS, CleanMethod
-from translate_utils.infrastructure.cache import CachedFileReader
-from translate_utils.infrastructure.io import read_renpy_file, write_renpy_file
-from translate_utils.infrastructure.parser import RegexDialogueParser
-from translate_utils.infrastructure.parsers.extractors import strings_block_extractor
-from translate_utils.infrastructure.parsers.regexes import RE_STRINGS_CONFIG, RE_TRANSLATE_CONFIG
+from translate_utils.infrastructure.caching.cache import CachedFileReader
+from translate_utils.infrastructure.filesystem.io import read_renpy_file, write_renpy_file
+from translate_utils.infrastructure.parsing.renpy.extractors import strings_block_extractor
+from translate_utils.infrastructure.parsing.renpy.parser import RegexDialogueParser
+from translate_utils.infrastructure.parsing.renpy.regexes import (
+    RE_STRINGS_CONFIG,
+    RE_TRANSLATE_CONFIG,
+)
 from translate_utils.services.cleanup_service import CleanupService
 from translate_utils.services.mappers import build_reverse_lookup
 

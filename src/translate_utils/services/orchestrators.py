@@ -19,9 +19,9 @@ from translate_utils.core.entities import (
     Progress,
     TranslationStats,
 )
-from translate_utils.infrastructure.logger import get_logger
-from translate_utils.infrastructure.types import ExecutorFactory
+from translate_utils.infrastructure.logging.logger import get_logger
 from translate_utils.services.language_check_service import LanguageCheckService
+from translate_utils.services.ports import ExecutorFactory
 from translate_utils.services.progress_service import ProgressService
 
 LOGGER = get_logger(__name__)

@@ -1,7 +1,7 @@
 from translate_utils.core.entities import FileProgressSummary, Progress
 from translate_utils.core.rules import TranslationValidator
 from translate_utils.infrastructure.logging.logger import get_logger
-from translate_utils.infrastructure.parsers.regexes import RegexBlockConfig
+from translate_utils.infrastructure.parsing.renpy.regexes import RegexBlockConfig
 
 LOGGER = get_logger(__name__)
 

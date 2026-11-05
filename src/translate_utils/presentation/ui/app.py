@@ -1,6 +1,6 @@
 from textual.app import App
 
-from translate_utils.infrastructure.logger import setup_logging
+from translate_utils.infrastructure.logging.logger import setup_logging
 from translate_utils.presentation.ui.main_screen import MainScreen
 
 LOGGER = setup_logging("GW-Translate")

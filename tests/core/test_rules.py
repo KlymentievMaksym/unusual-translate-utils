@@ -7,8 +7,8 @@ from translate_utils.core.rules import (
     IsSymbolOnlySpec,
     NoMixedAlphabetsSpec,
 )
-from translate_utils.infrastructure.factories import create_default_validator
-from translate_utils.infrastructure.parsers.processors import RenpyProcessor
+from translate_utils.infrastructure.composition.factories import create_default_validator
+from translate_utils.infrastructure.parsing.renpy.processors import RenpyProcessor
 
 
 @pytest.fixture

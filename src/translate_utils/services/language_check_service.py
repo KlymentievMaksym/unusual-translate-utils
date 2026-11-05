@@ -9,9 +9,9 @@ from translate_utils.core.entities import FileCheckResult, LanguageMatch, Transl
 from translate_utils.core.exceptions import LanguageToolError
 from translate_utils.core.interfaces import ParseStrategy, ReadStrategy, TextProcessor
 from translate_utils.core.rules import TranslationValidator
-from translate_utils.infrastructure.language_tool import LanguageToolClient
-from translate_utils.infrastructure.logger import get_logger
-from translate_utils.infrastructure.parsers.regexes import (
+from translate_utils.infrastructure.language_tools.language_tool import LanguageToolClient
+from translate_utils.infrastructure.logging.logger import get_logger
+from translate_utils.infrastructure.parsing.renpy.regexes import (
     NAME_FORM_MAP,
     RE_NAME_FORM,
     name_form_replacer,
@@ -108,7 +108,8 @@ class LanguageCheckService:
 
         length = len(items_to_check)
         LOGGER.debug(
-            f"{length} items to check with {self.item_workers} workers, about {length // self.item_workers} item per worker"
+            f"{length} items to check with {self.item_workers} workers,"
+            f" about {length // self.item_workers} item per worker"
         )
 
         matches_by_key: defaultdict[str, list[LanguageMatch]] = defaultdict(list)

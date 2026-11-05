@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 
 from translate_utils.core.interfaces import ReadStrategy, WriteStrategy
-from translate_utils.infrastructure.parsers.regexes import (
+from translate_utils.infrastructure.parsing.renpy.regexes import (
     DLG_HASH,
     DLG_LABEL,
     DLG_TRANSLATED,
@@ -37,7 +37,7 @@ class MergeService:
         if dial_entries:
             dial_lookup = {e.key: e.old_translation for e in dial_entries}
 
-            def replace_dialogue(match: re.Match) -> str:
+            def replace_dialogue(match: re.Match[str]) -> str:
                 nonlocal applied_count
                 data = match.groupdict()
                 key = f"{data[DLG_LABEL]}_{data[DLG_HASH]}"
@@ -67,13 +67,14 @@ class MergeService:
         if str_entries:
             str_lookup = {e.key: e.old_translation for e in str_entries}
 
-            def replace_string(match: re.Match) -> str:
+            def replace_string(match: re.Match[str]) -> str:
                 nonlocal applied_count
                 data = match.groupdict()
                 key = data.get(STR_ORIGINAL)
 
                 if key in str_lookup:
                     old_translation = str_lookup[key]
+                    old_translation = old_translation if old_translation is not None else ""
                     applied_count += 1
 
                     start, end = match.span(STR_TRANSLATED)

@@ -3,11 +3,11 @@ from pathlib import Path
 from translate_utils.core.exceptions import FileError
 from translate_utils.core.interfaces import CleanStrategy
 from translate_utils.core.replacer_methods import AVAILABLE_METHODS, CleanMethod
-from translate_utils.infrastructure.factories import create_default_cleaner
-from translate_utils.infrastructure.io import read_renpy_file, write_renpy_file
-from translate_utils.infrastructure.logger import setup_logging
-from translate_utils.infrastructure.parser import RegexDialogueParser
-from translate_utils.infrastructure.parsers.regexes import RE_TRANSLATE_CONFIG
+from translate_utils.infrastructure.composition.factories import create_default_cleaner
+from translate_utils.infrastructure.filesystem.io import read_renpy_file, write_renpy_file
+from translate_utils.infrastructure.logging.logger import setup_logging
+from translate_utils.infrastructure.parsing.renpy.parser import RegexDialogueParser
+from translate_utils.infrastructure.parsing.renpy.regexes import RE_TRANSLATE_CONFIG
 from translate_utils.presentation.cli.args import cleanup_repeats_parse_args
 from translate_utils.services.cleanup_service import CleanupService
 from translate_utils.services.mappers import build_reverse_lookup

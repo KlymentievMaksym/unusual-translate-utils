@@ -1,4 +1,3 @@
-import difflib
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
@@ -9,8 +8,6 @@ from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Input, Label, TextArea, Tree
 
-from translate_utils.infrastructure.factories import create_default_parser
-from translate_utils.infrastructure.io import read_renpy_file
 from translate_utils.services.compare_service import CompareService, DirectoryCompareResult
 
 

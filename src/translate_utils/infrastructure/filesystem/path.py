@@ -26,7 +26,7 @@ DEFAULT_LANGUAGE_EXCEPTIONS_FILE = DEFAULT_DIR_FOR_SETTINGS / "lang_exceptions.t
 DEFAULT_LANGUAGE_EXCEPTIONS = "\n"
 
 
-def create_default_dirs():
+def create_default_dirs() -> None:
     DEFAULT_DIR_FOR_LOGS.mkdir(exist_ok=True)
     DEFAULT_DIR_FOR_COMPARE_LOGS.mkdir(exist_ok=True)
     DEFAULT_DIR_FOR_CHECK_LOGS.mkdir(exist_ok=True)

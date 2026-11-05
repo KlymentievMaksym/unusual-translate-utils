@@ -3,7 +3,7 @@ import re
 
 import pytest
 
-from translate_utils.infrastructure.parsers.regexes import (
+from translate_utils.infrastructure.parsing.renpy.regexes import (
     RE_STRINGS_CONFIG,
     RE_TRANSLATE_CONFIG,
     STR_ORIGINAL,

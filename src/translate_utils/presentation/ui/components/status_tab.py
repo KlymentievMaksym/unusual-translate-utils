@@ -7,10 +7,10 @@ from textual.app import ComposeResult
 from textual.containers import VerticalScroll
 from textual.widgets import Button, Label, Static
 
-from translate_utils.infrastructure.cache import CachedFileReader
-from translate_utils.infrastructure.factories import create_default_progress_counter
-from translate_utils.infrastructure.io import gather_extension_files, read_renpy_file
-from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_TRANSLATION
+from translate_utils.infrastructure.caching.cache import CachedFileReader
+from translate_utils.infrastructure.composition.factories import create_default_progress_counter
+from translate_utils.infrastructure.filesystem.io import gather_extension_files, read_renpy_file
+from translate_utils.infrastructure.filesystem.path import DEFAULT_DIR_FOR_TRANSLATION
 from translate_utils.presentation.visualize.mixins import ProgressReportData
 from translate_utils.presentation.visualize.terminal import ProgressTerminalReport
 from translate_utils.services.orchestrators import BatchProgressOrchestrator

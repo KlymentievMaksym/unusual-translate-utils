@@ -1,11 +1,11 @@
 from re import Pattern
 
-from translate_utils.infrastructure.parsers.regexes import RE_TAGS, RE_WORDS
+from translate_utils.infrastructure.parsing.renpy.regexes import RE_TAGS, RE_WORDS
 
 
 class RenpyProcessor:
     def __init__(
-        self, RE_strip_tags: Pattern = RE_TAGS, RE_extract_words: Pattern = RE_WORDS
+        self, RE_strip_tags: Pattern[str] = RE_TAGS, RE_extract_words: Pattern[str] = RE_WORDS
     ) -> None:
 
         self.RE_strip_tags = RE_strip_tags

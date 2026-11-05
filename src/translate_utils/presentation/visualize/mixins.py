@@ -4,8 +4,6 @@ from typing import Any
 from translate_utils.core.entities import (
     DialogueLine,
     FileProgressSummary,
-    LanguageCheckResults,
-    LanguageMatch,
     TranslationStats,
 )
 
@@ -79,22 +77,3 @@ class ProgressReportData(ReportDataMixin):
     @property
     def report_name(self) -> str:
         return "Translation Progress Report"
-
-
-class LanguageCheckReportData(ReportDataMixin):
-    def __init__(self, results: LanguageCheckResults, limit: int = 50) -> None:
-        self.results = results
-        self._raw_limit = limit
-
-    @property
-    def records(self) -> dict[str, tuple[str, LanguageMatch]]:
-        flattened: dict[str, tuple[str, LanguageMatch]] = {}
-        for file_res in self.results.file_results:
-            for idx, match in enumerate(file_res.matches):
-                key = f"{file_res.filepath.name}:{match.key}:{idx}"
-                flattened[key] = (file_res.filepath.name, match)
-        return flattened
-
-    @property
-    def report_name(self) -> str:
-        return "Language Check Report"

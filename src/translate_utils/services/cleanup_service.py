@@ -9,7 +9,7 @@ from translate_utils.core.interfaces import (
     ReverseLookupMapper,
     WriteStrategy,
 )
-from translate_utils.infrastructure.logger import get_logger
+from translate_utils.infrastructure.logging.logger import get_logger
 
 LOGGER = get_logger(__name__)
 

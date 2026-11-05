@@ -2,7 +2,7 @@ from pathlib import Path
 
 from translate_utils.core.entities import FileStats
 from translate_utils.core.interfaces import ProgressCounterFunc, ReadStrategy
-from translate_utils.infrastructure.logger import get_logger
+from translate_utils.infrastructure.logging.logger import get_logger
 
 LOGGER = get_logger(__name__)
 

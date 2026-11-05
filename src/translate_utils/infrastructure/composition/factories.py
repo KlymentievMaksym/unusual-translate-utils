@@ -7,15 +7,18 @@ from translate_utils.core.rules import (
     IsSymbolOnlySpec,
     TranslationValidator,
 )
-from translate_utils.infrastructure.progress.counter import RegexProgressCounter
-from translate_utils.infrastructure.parser import (
+from translate_utils.infrastructure.parsing.renpy.extractors import strings_block_extractor
+from translate_utils.infrastructure.parsing.renpy.parser import (
     RegexDialAndStrParser,
     RegexDialogueParser,
     RegexStringParser,
 )
-from translate_utils.infrastructure.parsers.extractors import strings_block_extractor
-from translate_utils.infrastructure.parsers.processors import RenpyProcessor
-from translate_utils.infrastructure.parsers.regexes import RE_STRINGS_CONFIG, RE_TRANSLATE_CONFIG
+from translate_utils.infrastructure.parsing.renpy.processors import RenpyProcessor
+from translate_utils.infrastructure.parsing.renpy.regexes import (
+    RE_STRINGS_CONFIG,
+    RE_TRANSLATE_CONFIG,
+)
+from translate_utils.infrastructure.progress.counter import RegexProgressCounter
 
 
 def create_default_cleaner() -> TranslationCleaner:
@@ -30,9 +33,6 @@ def create_default_parser() -> RegexDialAndStrParser:
 
 
 def create_default_validator() -> TranslationValidator:
-    """
-    Factory function to assemble and configure the default TranslationValidator.
-    """
     text_processor = RenpyProcessor()
     specification = IsSymbolOnlySpec(text_processor) | (
         IsDifferentSpec() & HasTargetAlphabetSpec()
@@ -44,10 +44,6 @@ def create_default_validator() -> TranslationValidator:
 
 
 def create_default_progress_counter() -> RegexProgressCounter:
-    """
-    Factory function to assemble and configure the default RegexProgressCounter.
-    Encapsulates the complex initialization of specifications and regex configs.
-    """
     return RegexProgressCounter(
         validator=create_default_validator(),
         dialogues_config=RE_TRANSLATE_CONFIG,

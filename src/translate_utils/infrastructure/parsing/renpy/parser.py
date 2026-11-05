@@ -1,6 +1,10 @@
 from translate_utils.core.entities import DialogueLine, TranslationsDicts
 from translate_utils.core.interfaces import ParseStrategy
-from translate_utils.infrastructure.parsers.regexes import DLG_HASH, DLG_LABEL, RegexBlockConfig
+from translate_utils.infrastructure.parsing.renpy.regexes import (
+    DLG_HASH,
+    DLG_LABEL,
+    RegexBlockConfig,
+)
 
 
 class BaseRegexParser:

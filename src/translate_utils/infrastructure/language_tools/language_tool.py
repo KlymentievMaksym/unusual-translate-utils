@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -59,7 +59,7 @@ class LanguageToolClient:
                 timeout=self.timeout,
             )
             response.raise_for_status()
-            return response.json()
+            return cast(dict[str, Any], response.json())
         except requests.exceptions.RequestException as exc:
             raise LanguageToolConnectionError(f"HTTP request failed: {exc}") from exc
         except ValueError as exc:

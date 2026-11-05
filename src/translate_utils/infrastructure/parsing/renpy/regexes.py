@@ -26,7 +26,7 @@ NAME_FORM_MAP = {
 RE_NAME_FORM = re.compile(r"\[name_form\('(\w+)'\)\]")
 
 
-def name_form_replacer(match: re.Match) -> str:
+def name_form_replacer(match: re.Match[str]) -> str:
     grammatical_case = match.group(1)
     word = NAME_FORM_MAP.get(grammatical_case, NAME_FORM_MAP["default"])
     return word

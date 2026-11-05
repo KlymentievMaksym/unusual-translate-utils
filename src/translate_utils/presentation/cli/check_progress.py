@@ -1,12 +1,12 @@
 import concurrent.futures
 from pathlib import Path
 
-from translate_utils.infrastructure.cache import CachedFileReader
-from translate_utils.infrastructure.factories import create_default_progress_counter
-from translate_utils.infrastructure.io import gather_extension_files, read_renpy_file
-from translate_utils.infrastructure.logger import setup_logging
-from translate_utils.infrastructure.path import DEFAULT_DIR_FOR_TRANSLATION
-from translate_utils.infrastructure.updater import update_readme_progress
+from translate_utils.infrastructure.caching.cache import CachedFileReader
+from translate_utils.infrastructure.composition.factories import create_default_progress_counter
+from translate_utils.infrastructure.filesystem.io import gather_extension_files, read_renpy_file
+from translate_utils.infrastructure.filesystem.path import DEFAULT_DIR_FOR_TRANSLATION
+from translate_utils.infrastructure.filesystem.updater import update_readme_progress
+from translate_utils.infrastructure.logging.logger import setup_logging
 from translate_utils.presentation.cli.args import check_translation_progress_parse_args
 from translate_utils.presentation.visualize.markdown import ProgressMarkdownReport
 from translate_utils.presentation.visualize.mixins import ProgressReportData

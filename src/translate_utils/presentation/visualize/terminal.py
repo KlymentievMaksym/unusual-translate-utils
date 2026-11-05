@@ -8,7 +8,6 @@ from rich.table import Table
 from translate_utils.presentation.color import get_color_gradient
 from translate_utils.presentation.visualize.mixins import (
     DialogueReportData,
-    LanguageCheckReportData,
     ProgressReportData,
     ReportDataMixin,
     StringReportData,
@@ -132,40 +131,4 @@ class ProgressTerminalReport(BaseTerminalReport[ProgressReportData]):
                 "[bold]-[/bold]",
                 "[bold]-[/bold]",
                 f"[bold cyan]{global_total.percentage:>6.2f}%[/bold cyan]",
-            )
-
-
-class LanguageCheckTerminalReport(BaseTerminalReport[LanguageCheckReportData]):
-    """Renders LanguageTool inspection results as a Rich table in the terminal."""
-
-    def _create_empty_table(self) -> Table:
-        table = Table(
-            title="LanguageTool Inspection Report",
-            show_header=True,
-            header_style="bold magenta",
-        )
-
-        table.add_column("File", style="cyan")
-        table.add_column("Key", style="yellow")
-        table.add_column("Rule ID", style="red")
-        table.add_column("Message", style="white")
-        table.add_column("Context", style="dim")
-        table.add_column("Suggestions", style="green")
-
-        return table
-
-    def _populate_table_rows(self, table: Table) -> None:
-        for _, (filename, match) in itertools.islice(self._data.records.items(), self._data.limit):
-            suggestions_str = ", ".join(match.replacements) if match.replacements else "-"
-            table.add_row(
-                filename,
-                # truncate(match.key, 20),
-                match.key,
-                match.rule_id,
-                match.message,
-                match.context_text,
-                suggestions_str,
-                # truncate(match.message, 40),
-                # truncate(match.context_text, 40),
-                # truncate(suggestions_str, 30),
             )

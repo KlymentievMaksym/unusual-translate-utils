@@ -5,7 +5,7 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Header, TabbedContent
 
-from translate_utils.infrastructure.saver import save_active_tab
+from translate_utils.infrastructure.filesystem.saver import save_active_tab
 from translate_utils.presentation.ui.base_layout import ActionPanel
 
 

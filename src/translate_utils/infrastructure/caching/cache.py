@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 from translate_utils.core.exceptions import TranslationReadError
 from translate_utils.core.interfaces import ReadStrategy
 from translate_utils.infrastructure.caching.models import FileCache
-from translate_utils.infrastructure.logger import get_logger
+from translate_utils.infrastructure.logging.logger import get_logger
 
 LOGGER = get_logger(__name__)
 

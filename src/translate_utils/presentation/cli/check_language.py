@@ -4,22 +4,25 @@ from pathlib import Path
 
 from translate_utils.core.entities import ReplacementEntity, RuleEntity
 from translate_utils.core.rules import IsSymbolOnlySpec
-from translate_utils.infrastructure.cache import CachedFileReader
-from translate_utils.infrastructure.factories import create_default_parser, create_default_validator
-from translate_utils.infrastructure.io import (
+from translate_utils.infrastructure.caching.cache import CachedFileReader
+from translate_utils.infrastructure.composition.factories import (
+    create_default_parser,
+    create_default_validator,
+)
+from translate_utils.infrastructure.filesystem.io import (
     gather_extension_files,
     read_renpy_file,
     write_renpy_file,
 )
-from translate_utils.infrastructure.language_tool import LanguageToolClient
-from translate_utils.infrastructure.logger import setup_logging
-from translate_utils.infrastructure.parsers.processors import RenpyProcessor
-from translate_utils.infrastructure.parsers.regexes import RE_SIMPLE_TAGS
-from translate_utils.infrastructure.path import (
+from translate_utils.infrastructure.filesystem.path import (
     DEFAULT_DIR_FOR_CHECK_LOGS,
     DEFAULT_DIR_FOR_TRANSLATION,
     DEFAULT_LANGUAGE_EXCEPTIONS_FILE,
 )
+from translate_utils.infrastructure.language_tools.language_tool import LanguageToolClient
+from translate_utils.infrastructure.logging.logger import setup_logging
+from translate_utils.infrastructure.parsing.renpy.processors import RenpyProcessor
+from translate_utils.infrastructure.parsing.renpy.regexes import RE_SIMPLE_TAGS
 from translate_utils.presentation.cli.args import check_language_parse_args
 from translate_utils.services.language_check_service import LanguageCheckService
 from translate_utils.services.orchestrators import BatchLanguageCheckOrchestrator
@@ -100,7 +103,7 @@ def check_language() -> None:
             context_text = _match.original_text
             underliner = list(" " * len(context_text))
 
-            replacements: dict[ReplacementEntity, list] = defaultdict(list)
+            replacements: dict[ReplacementEntity, list[str]] = defaultdict(list)
             rules: dict[ReplacementEntity, RuleEntity] = defaultdict()
 
             break_for = [False] * len(matches)
