@@ -3,14 +3,18 @@ from pathlib import Path
 from translate_utils.infrastructure.filesystem.io import write_json_file, write_renpy_file
 
 
-def find_project_root(current_path: Path, marker: str = "src") -> Path:
-    for parent in current_path.parents:
-        if (parent / marker).exists():
+def find_project_root(
+    start: Path | None = None, markers: tuple[str, ...] = ("game", "src")
+) -> Path:
+    start = (start or Path.cwd()).resolve()
+    for parent in (start, *start.parents):
+        if any((parent / m).exists() for m in markers):
             return parent
-    raise FileNotFoundError(marker)
+    raise FileNotFoundError(f"None of {markers} found above {start}")
 
 
-PROJECT_ROOT = find_project_root(Path(__file__), marker="src")
+PROJECT_ROOT = find_project_root()
+# PROJECT_ROOT = Path.cwd()
 DEFAULT_DIR_FOR_TRANSLATION = PROJECT_ROOT / "game" / "tl" / "ukrainian"
 
 DEFAULT_DIR_FOR_LOGS = PROJECT_ROOT / "translate_logs"
