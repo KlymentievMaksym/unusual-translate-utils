@@ -3,13 +3,9 @@ requires = ["setuptools >= 77.0.3", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "GW-translate"
+name = "unusual-translate-utils"
 dynamic = ["version"]
-requires-python = ">=3.11"
-authors = [
-  {name = "---", email = "---@gmail.com"},
-]
-description = "---"
+requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
 dependencies = [
@@ -40,8 +36,8 @@ check = [
 ]
 
 [project.urls]
-Repository = "https://github.com/LagencyUA/GW-translate.git"
-Issues = "https://github.com/LagencyUA/GW-translate/issues"
+Repository = "https://github.com/KlymentievMaksym/unusual-translate-utils.git"
+Issues = "https://github.com/KlymentievMaksym/unusual-translate-utils/issues"
 
 [project.scripts]
 gwt = "translate_utils.main:main"
