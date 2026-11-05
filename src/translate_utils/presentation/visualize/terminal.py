@@ -134,6 +134,7 @@ class ProgressTerminalReport(BaseTerminalReport[ProgressReportData]):
                 f"[bold cyan]{global_total.percentage:>6.2f}%[/bold cyan]",
             )
 
+
 class LanguageCheckTerminalReport(BaseTerminalReport[LanguageCheckReportData]):
     """Renders LanguageTool inspection results as a Rich table in the terminal."""
 
@@ -154,12 +155,8 @@ class LanguageCheckTerminalReport(BaseTerminalReport[LanguageCheckReportData]):
         return table
 
     def _populate_table_rows(self, table: Table) -> None:
-        for _, (filename, match) in itertools.islice(
-            self._data.records.items(), self._data.limit
-        ):
-            suggestions_str = (
-                ", ".join(match.replacements) if match.replacements else "-"
-            )
+        for _, (filename, match) in itertools.islice(self._data.records.items(), self._data.limit):
+            suggestions_str = ", ".join(match.replacements) if match.replacements else "-"
             table.add_row(
                 filename,
                 # truncate(match.key, 20),

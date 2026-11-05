@@ -14,20 +14,21 @@ RE_TAGS = re.compile(r"\{.*?\}|\[.*?\]")
 RE_WORDS = re.compile(r"\w+")
 
 NAME_FORM_MAP = {
-    "default": "КУРВА ПРОПУСТИВ ВІДМІНЮВАННЯ",
-    "nom": "гравець",
-    "gen": "гравця",
-    "dat": "гравцеві",
-    "acc": "гравця",
-    "ins": "гравцем",
-    "loc": "гравці",
-    "voc": "гравцю",
+    "default": "КУРВААА ПРОПУСТИИИВ ВІДМІІІНЮВАННЯ",
+    "nom": "Гравець",
+    "gen": "Гравця",
+    "dat": "Гравцеві",
+    "acc": "Гравця",
+    "ins": "Гравцем",
+    "loc": "Гравці",
+    "voc": "Гравцю",
 }
 RE_NAME_FORM = re.compile(r"\[name_form\('(\w+)'\)\]")
 
+
 def name_form_replacer(match: re.Match) -> str:
     grammatical_case = match.group(1)
-    word = NAME_FORM_MAP.get(grammatical_case, "гравець")
+    word = NAME_FORM_MAP.get(grammatical_case, NAME_FORM_MAP["default"])
     return word
 
 

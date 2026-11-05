@@ -42,17 +42,18 @@ def compare_dirs() -> None:
         clean_method=clean_method,
         minor_threshold=args.minor_threshold,
         match_threshold=args.match_threshold,
-        auto=args.auto
+        auto=args.auto,
     )
 
+
 def _compare_dirs(
-        dir1: str,
-        dir2: str,
-        clean_method: CleanStrategy,
-        minor_threshold: float,
-        match_threshold: float,
-        auto: bool = False
-    ) -> None:
+    dir1: str,
+    dir2: str,
+    clean_method: CleanStrategy,
+    minor_threshold: float,
+    match_threshold: float,
+    auto: bool = False,
+) -> None:
     cleaner = create_default_cleaner()
     parser = create_default_parser()
 
@@ -62,18 +63,13 @@ def _compare_dirs(
         file_cleaner=cleaner,
         file_writer=lambda filepath, content: None,
         mapper=build_reverse_lookup,
-        verbose=False
+        verbose=False,
     )
     compare_service = CompareService(
-        file_reader=read_renpy_file,
-        file_parser=parser,
-        file_cleaner=cleaner
+        file_reader=read_renpy_file, file_parser=parser, file_cleaner=cleaner
     )
     if auto:
-        merge_service = MergeService(
-            file_reader=read_renpy_file,
-            file_writer=write_renpy_file
-        )
+        merge_service = MergeService(file_reader=read_renpy_file, file_writer=write_renpy_file)
 
     compare_results = compare_service.compare_directories(dir1, dir2)
     text = f"""
@@ -91,23 +87,19 @@ Changed: {compare_results.changed}
         text = f"Changed: {filepath}"
         try:
             clean_results1 = clean_service.clean(
-                filepath=Path(dir1) / filepath,
-                clean_method=clean_method
+                filepath=Path(dir1) / filepath, clean_method=clean_method
             )
             clean_results2 = clean_service.clean(
-                filepath=Path(dir2) / filepath,
-                clean_method=clean_method
+                filepath=Path(dir2) / filepath, clean_method=clean_method
             )
             dial_and_str1 = parser(clean_results1.cleaned_text)
             dial_and_str2 = parser(clean_results2.cleaned_text)
 
             string_diff = StringDiff(
-                min_match_threshold=match_threshold,
-                minor_threshold=minor_threshold
+                min_match_threshold=match_threshold, minor_threshold=minor_threshold
             )
             dialogue_diff = DialogueSequenceDiff(
-                min_match_threshold=match_threshold,
-                minor_threshold=minor_threshold
+                min_match_threshold=match_threshold, minor_threshold=minor_threshold
             )
 
             old_dialogues = list(dial_and_str1.dialogues.values())
@@ -119,9 +111,7 @@ Changed: {compare_results.changed}
             if auto:
                 target_path = Path(dir2) / filepath
                 applied_count = merge_service.apply_unchanged_translations(
-                    target_path,
-                    dial_diff,
-                    str_diff
+                    target_path, dial_diff, str_diff
                 )
                 if applied_count > 0:
                     LOGGER.info(f"Successfully applied {applied_count} translations to {filepath}")
@@ -143,33 +133,37 @@ Changed: {compare_results.changed}
                 dialogues_changes: list[ChangeEntry] = getattr(dial_diff, attr)
                 strings_changes: list[ChangeEntry] = getattr(str_diff, attr)
 
-                d_result = "\n".join([
-                    (
-                        f"\n\tKey: {dialogue.key}"
-                        + (
-                            f"\n\tSimilarity: {dialogue.similarity:.2f}%"
-                            if attr in show_similarity_in
-                            else ""
+                d_result = "\n".join(
+                    [
+                        (
+                            f"\n\tKey: {dialogue.key}"
+                            + (
+                                f"\n\tSimilarity: {dialogue.similarity:.2f}%"
+                                if attr in show_similarity_in
+                                else ""
+                            )
+                            + f"\n\tOld translation: {dialogue.old_translation}"
+                            f"\n\tOld text: {dialogue.old_text}"
+                            f"\n\tNew text: {dialogue.new_text}"
                         )
-                        + f"\n\tOld translation: {dialogue.old_translation}"
-                        f"\n\tOld text: {dialogue.old_text}"
-                        f"\n\tNew text: {dialogue.new_text}"
-                    )
-                    for dialogue in dialogues_changes
-                ])
-                s_result = "\n".join([
-                    (
-                        f"\n\tKey: {string.key}"
-                        + (
-                            f"\n\tSimilarity: {string.similarity:.2f}%"
-                            if attr in show_similarity_in
-                            else ""
+                        for dialogue in dialogues_changes
+                    ]
+                )
+                s_result = "\n".join(
+                    [
+                        (
+                            f"\n\tKey: {string.key}"
+                            + (
+                                f"\n\tSimilarity: {string.similarity:.2f}%"
+                                if attr in show_similarity_in
+                                else ""
+                            )
+                            + f"\n\tOld text: {string.old_text}"
+                            f"\n\tNew text: {string.new_text}"
                         )
-                        + f"\n\tOld text: {string.old_text}"
-                        f"\n\tNew text: {string.new_text}"
-                    )
-                    for string in strings_changes
-                ])
+                        for string in strings_changes
+                    ]
+                )
 
                 text += f"\n{res_attrs_sep}\n{attr.capitalize()} dialogues changes: {d_result}"
                 text += f"\n{res_attrs_sep}\n{attr.capitalize()} strings changes: {s_result}"
@@ -181,6 +175,7 @@ Changed: {compare_results.changed}
         result_file = Path(filepath).stem + ".log"
         write_renpy_file(DEFAULT_DIR_FOR_COMPARE_LOGS / result_file, text)
         LOGGER.info(f"Saved results to {result_file}")
+
 
 if __name__ == "__main__":
     compare_dirs()

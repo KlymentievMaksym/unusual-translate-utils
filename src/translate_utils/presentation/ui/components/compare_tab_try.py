@@ -183,11 +183,12 @@ class CompareTreeApp(App[None]):
 
 
 if __name__ == "__main__":
-    app = CompareTreeApp(
-        CompareService(
-            file_reader=,
-            file_parser=create_default_parser(),
-            file_cleaner=
-        )
-    )
-    app.run()
+    # app = CompareTreeApp(
+    #     CompareService(
+    #         file_reader=,
+    #         file_parser=create_default_parser(),
+    #         file_cleaner=
+    #     )
+    # )
+    # app.run()
+    pass

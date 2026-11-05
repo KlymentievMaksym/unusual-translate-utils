@@ -27,16 +27,20 @@ class FileWriteError(FileError):
 
     pass
 
+
 class LanguageToolError(TranslationError):
     """Base exception for LanguageTool client errors."""
+
     pass
 
 
 class LanguageToolConnectionError(LanguageToolError):
     """Raised when the server drops connection, timeouts, or responds with 500/502/503."""
+
     pass
 
 
 class LanguageToolResponseError(LanguageToolError):
     """Raised when the response payload is malformed or unexpected."""
+
     pass

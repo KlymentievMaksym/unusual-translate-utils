@@ -1,7 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from translate_utils.core.entities import DialogueLine, FileProgressSummary, LanguageCheckResults, LanguageMatch, TranslationStats
+from translate_utils.core.entities import (
+    DialogueLine,
+    FileProgressSummary,
+    LanguageCheckResults,
+    LanguageMatch,
+    TranslationStats,
+)
 
 
 class ReportDataMixin(ABC):
@@ -73,6 +79,7 @@ class ProgressReportData(ReportDataMixin):
     @property
     def report_name(self) -> str:
         return "Translation Progress Report"
+
 
 class LanguageCheckReportData(ReportDataMixin):
     def __init__(self, results: LanguageCheckResults, limit: int = 50) -> None:

@@ -64,7 +64,7 @@ def check_language() -> None:
         language=args.language,
         disabled_rules=args.disabled_rules,
         dicts=dicts,
-        max_workers=args.max_workers
+        max_workers=args.max_workers,
     )
     dicts = list(dct.lower() for dct in dicts) if dicts is not None else []
 
@@ -76,7 +76,7 @@ def check_language() -> None:
         language_checker=checker,
         processor=RenpyProcessor(RE_strip_tags=RE_SIMPLE_TAGS),
         validator=validator,
-        item_workers=args.max_workers
+        item_workers=args.max_workers,
     )
 
     orchestrator = BatchLanguageCheckOrchestrator(
@@ -89,7 +89,7 @@ def check_language() -> None:
     results = orchestrator.execute(rpy_files)
     LOGGER.info("Check done")
 
-    next_line = '\n'
+    next_line = "\n"
     global_separator = "=" * 60 + next_line
     local_separator = "_" * 30 + next_line
 
@@ -105,33 +105,27 @@ def check_language() -> None:
 
             break_for = [False] * len(matches)
             for index, match in enumerate(matches):
-
                 global_offset = match.offset
 
-                flagged_word = context_text[global_offset:global_offset+match.length].lower()
+                flagged_word = context_text[global_offset : global_offset + match.length].lower()
 
                 if flagged_word in dicts:
                     break_for[index] = True
                     continue
 
-                if (
-                    match.rule_id == "COMMA_PARENTHESIS_WHITESPACE"
-                    and IsSymbolOnlySpec(RenpyProcessor()).is_satisfied_by(flagged_word, "")
-                ):
+                if match.rule_id == "COMMA_PARENTHESIS_WHITESPACE" and IsSymbolOnlySpec(
+                    RenpyProcessor()
+                ).is_satisfied_by(flagged_word, ""):
                     break_for[index] = True
                     continue
 
                 replacement_entity = ReplacementEntity(
-                    global_offset=global_offset,
-                    word=flagged_word
+                    global_offset=global_offset, word=flagged_word
                 )
 
-                rule_entity = RuleEntity(
-                    id=match.rule_id,
-                    message=match.message
-                )
+                rule_entity = RuleEntity(id=match.rule_id, message=match.message)
 
-                underliner[global_offset:global_offset+match.length] = '-' * match.length
+                underliner[global_offset : global_offset + match.length] = "-" * match.length
                 replacements[replacement_entity].extend(match.replacements)
                 rules[replacement_entity] = rule_entity
 
@@ -170,6 +164,7 @@ def check_language() -> None:
         LOGGER.warning(f"Encountered errors in {len(results.failed_files)} files:")
         for file_name, error_message in results.failed_files.items():
             LOGGER.warning(f" - {file_name}: {error_message}")
+
 
 if __name__ == "__main__":
     check_language()

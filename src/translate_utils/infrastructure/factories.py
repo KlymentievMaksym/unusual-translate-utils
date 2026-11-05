@@ -19,10 +19,7 @@ from translate_utils.infrastructure.parsers.regexes import RE_STRINGS_CONFIG, RE
 
 
 def create_default_cleaner() -> TranslationCleaner:
-    return TranslationCleaner(
-        RE_STRINGS_CONFIG.pattern,
-        strings_block_extractor
-    )
+    return TranslationCleaner(RE_STRINGS_CONFIG.pattern, strings_block_extractor)
 
 
 def create_default_parser() -> RegexDialAndStrParser:

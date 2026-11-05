@@ -15,11 +15,7 @@ from translate_utils.services.diff_service import ChangeSeverity, DiffResult
 
 
 class MergeService:
-    def __init__(
-        self,
-        file_reader: ReadStrategy[str],
-        file_writer: WriteStrategy[str]
-    ) -> None:
+    def __init__(self, file_reader: ReadStrategy[str], file_writer: WriteStrategy[str]) -> None:
         self._file_reader = file_reader
         self._file_writer = file_writer
 
@@ -33,7 +29,8 @@ class MergeService:
         applied_count = 0
 
         dial_entries = [
-            e for e in dial_diff.entries
+            e
+            for e in dial_diff.entries
             if e.severity == ChangeSeverity.UNCHANGED and e.old_translation
         ]
 
@@ -53,8 +50,8 @@ class MergeService:
                     match_start = match.start()
                     full_match = match.group(0)
 
-                    prefix = full_match[:start - match_start]
-                    suffix = full_match[end - match_start:]
+                    prefix = full_match[: start - match_start]
+                    suffix = full_match[end - match_start :]
                     return f"{prefix}{old_translation}{suffix}"
 
                 return match.group(0)
@@ -62,7 +59,8 @@ class MergeService:
             file_text = RE_TRANSLATE_CONFIG.pattern.sub(replace_dialogue, file_text)
 
         str_entries = [
-            e for e in str_diff.entries
+            e
+            for e in str_diff.entries
             if e.severity == ChangeSeverity.UNCHANGED and e.old_translation
         ]
 
@@ -83,9 +81,9 @@ class MergeService:
                     full_match = match.group(0)
 
                     return (
-                        full_match[:start - match_start]
+                        full_match[: start - match_start]
                         + old_translation
-                        + full_match[end - match_start:]
+                        + full_match[end - match_start :]
                     )
 
                 return match.group(0)

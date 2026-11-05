@@ -42,6 +42,7 @@ class CheckTranslationProgressArgs(Args):
     filepaths: str | None
     update_readme: str | None
 
+
 @dataclass
 class CheckLanguageArgs(Args):
     filepaths: list[str]
@@ -52,6 +53,7 @@ class CheckLanguageArgs(Args):
     disabled_rules: list[str] | None
     dicts: list[str] | None
     max_workers: int
+
 
 # --- ARGPARSE ---
 def cleanup_repeats_parse_args() -> CleanupRepeatsArgs:
@@ -116,6 +118,7 @@ def check_translation_progress_parse_args() -> CheckTranslationProgressArgs:
     )
     parser.add_argument("--update-readme", type=str, default=None, help="Update README")
     return CheckTranslationProgressArgs.from_namespace(parser.parse_args())
+
 
 def check_language_parse_args() -> CheckLanguageArgs:
     parser = argparse.ArgumentParser(

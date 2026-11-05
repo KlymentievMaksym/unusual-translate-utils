@@ -42,6 +42,7 @@ class Utf8Pager(Pager):
         except (BrokenPipeError, OSError):
             print(content)
 
+
 def _word_diff(old: str | None, new: str | None) -> Text:
     old_words = (old or "").split()
     new_words = (new or "").split()
@@ -79,7 +80,9 @@ def render_entries(source_name: str, severity: str, entries: list[ChangeEntry]) 
     for entry in entries:
         lines.append(Text(f"[{entry.key}]", style="bold"))
         if severity in ("added", "removed"):
-            lines.append(Text(entry.new_text or entry.old_text or "", style=SEVERITY_STYLE[severity]))
+            lines.append(
+                Text(entry.new_text or entry.old_text or "", style=SEVERITY_STYLE[severity])
+            )
         else:
             lines.append(_word_diff(entry.old_text, entry.new_text))
         lines.append(Text(""))
@@ -92,7 +95,9 @@ def render_entries(source_name: str, severity: str, entries: list[ChangeEntry]) 
     )
 
 
-def render_diff(filepath: str, dial_diff: DiffResult, str_diff: DiffResult, show: set[str] | None = None) -> None:
+def render_diff(
+    filepath: str, dial_diff: DiffResult, str_diff: DiffResult, show: set[str] | None = None
+) -> None:
     show = show if show is not None else {"major", "minor"}
 
     with console.pager(pager=Utf8Pager(), styles=True):

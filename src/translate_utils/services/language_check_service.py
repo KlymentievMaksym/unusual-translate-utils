@@ -46,10 +46,9 @@ class LanguageCheckService:
             return []
 
         clean_text = (
-            clean_text
-            .replace("\\n", " ")
+            clean_text.replace("\\n", " ")
             .replace("\\t", " ")
-            .replace("[[", " [")
+            .replace("[[", "[")
             .replace("[mc]", NAME_FORM_MAP["default"])
         )
         clean_text = RE_NAME_FORM.sub(name_form_replacer, clean_text)
@@ -59,11 +58,7 @@ class LanguageCheckService:
             response = self.language_checker.check_text(clean_text)
             for match in response.get("matches", []):
                 rule = match.get("rule", {})
-                replacements = [
-                    r["value"]
-                    for r in match.get("replacements", [])
-                    if "value" in r
-                ]
+                replacements = [r["value"] for r in match.get("replacements", []) if "value" in r]
                 context_text = match.get("context", {}).get("text", clean_text)
                 matches.append(
                     LanguageMatch(
@@ -95,24 +90,32 @@ class LanguageCheckService:
             for key, dialogue in parsed_data.dialogues.items():
                 original = dialogue.original_text
                 translation = dialogue.translation_text
-                if translation and self.validator and self.validator.check_is_translated(original, translation):
+                if (
+                    translation
+                    and self.validator
+                    and self.validator.check_is_translated(original, translation)
+                ):
                     items_to_check.append((key, translation))
 
         if parsed_data.strings:
             for key, string_val in parsed_data.strings.items():
-                if string_val and self.validator and self.validator.check_is_translated(key, string_val):
+                if (
+                    string_val
+                    and self.validator
+                    and self.validator.check_is_translated(key, string_val)
+                ):
                     items_to_check.append((key, string_val))
 
         length = len(items_to_check)
-        LOGGER.debug(f"{length} items to check with {self.item_workers} workers, about {length//self.item_workers} item per worker")
+        LOGGER.debug(
+            f"{length} items to check with {self.item_workers} workers, about {length // self.item_workers} item per worker"
+        )
 
         matches_by_key: defaultdict[str, list[LanguageMatch]] = defaultdict(list)
 
         file_task: TaskID | None = None
         if progress is not None and items_to_check:
-            file_task = progress.add_task(
-                f"[cyan]{filepath.name}", total=len(items_to_check)
-            )
+            file_task = progress.add_task(f"[cyan]{filepath.name}", total=len(items_to_check))
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.item_workers) as executor:
             future_to_key = {

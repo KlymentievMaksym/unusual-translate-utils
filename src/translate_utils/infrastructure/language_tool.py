@@ -29,11 +29,7 @@ class LanguageToolClient:
 
         self.session = requests.Session()
         pool_size = max_workers * max_workers
-        adapter = HTTPAdapter(
-            pool_connections=pool_size,
-            pool_maxsize=pool_size,
-            max_retries=3
-        )
+        adapter = HTTPAdapter(pool_connections=pool_size, pool_maxsize=pool_size, max_retries=3)
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
 

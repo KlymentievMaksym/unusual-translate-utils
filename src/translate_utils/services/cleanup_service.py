@@ -32,9 +32,7 @@ class CleanupService:
         self._mapper = mapper
         self._verbose = verbose
 
-    def clean(
-        self, filepath: str | Path, clean_method: CleanStrategy
-    ) -> CleanResults:
+    def clean(self, filepath: str | Path, clean_method: CleanStrategy) -> CleanResults:
         file_text = self._file_reader(filepath)
 
         dialogues = self._file_parser(file_text)
@@ -49,9 +47,7 @@ class CleanupService:
 
         return clean_results
 
-    def save(
-        self, new_filepath: str | Path, clean_results: CleanResults
-    ) -> None:
+    def save(self, new_filepath: str | Path, clean_results: CleanResults) -> None:
         new_filepath = Path(new_filepath)
 
         if new_filepath.exists():
@@ -68,10 +64,7 @@ class CleanupService:
         self, filepath: str | Path, clean_method: CleanStrategy, new_name: str | Path | None = None
     ) -> CleanResults:
 
-        clean_results = self.clean(
-            filepath=filepath,
-            clean_method=clean_method
-        )
+        clean_results = self.clean(filepath=filepath, clean_method=clean_method)
 
         self.save(
             new_filepath=Path(filepath) if new_name is None else Path(new_name),

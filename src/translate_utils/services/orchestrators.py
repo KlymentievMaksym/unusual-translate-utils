@@ -34,9 +34,7 @@ class BatchProgressOrchestrator:
     """
 
     def __init__(
-        self,
-        progress_service: ProgressService,
-        executor_factory: ExecutorFactory | None = None
+        self, progress_service: ProgressService, executor_factory: ExecutorFactory | None = None
     ) -> None:
 
         self._progress_service = progress_service
@@ -97,9 +95,7 @@ class BatchLanguageCheckOrchestrator:
             TimeRemainingColumn(),
             refresh_per_second=10,
         ) as progress:
-            overall_task = progress.add_task(
-                "[bold green]Overall Files", total=len(files)
-            )
+            overall_task = progress.add_task("[bold green]Overall Files", total=len(files))
 
             with self.executor_factory() as executor:
                 future_to_file = {
