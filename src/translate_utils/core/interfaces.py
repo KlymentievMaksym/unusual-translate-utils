@@ -51,6 +51,12 @@ class WriteStrategy(Protocol[T_in]):
     def __call__(self, filepath: str | Path, content: T_in) -> None: ...
 
 
+class ReportStrategy(Protocol):
+    """Defines how to report data to a storage medium."""
+
+    def __call__(self, *args) -> None: ...
+
+
 class MatchExtractorFunc(Protocol):
     """Extracts required domain parameters from a single regex match."""
 

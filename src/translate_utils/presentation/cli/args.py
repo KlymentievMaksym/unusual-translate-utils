@@ -54,7 +54,8 @@ class CheckLanguageArgs(Args):
     api_key: str | None
     disabled_rules: list[str] | None
     dicts: list[str] | None
-    max_workers: int
+    items_workers: int
+    file_workers: int
 
 
 # --- ARGPARSE ---
@@ -68,7 +69,7 @@ def cleanup_repeats_parse_args() -> CleanupRepeatsArgs:
     )
     parser.add_argument("--name", type=str, default=None, help="Save with new name")
     parser.add_argument(
-        "--clean_method",
+        "--clean-method",
         type=str,
         default="only_comment",
         help=f"Clean method, available is {list(AVAILABLE_METHODS.keys())}",
@@ -85,19 +86,19 @@ def compare_dirs_parse_args() -> CompareDirsArgs:
         help="Directories to compare",
     )
     parser.add_argument(
-        "--clean_method",
+        "--clean-method",
         type=str,
         default="only_comment",
         help=f"Clean method, available is {list(AVAILABLE_METHODS.keys())}",
     )
     parser.add_argument(
-        "--minor_threshold",
+        "--minor-threshold",
         type=float,
         default=95.0,
         help="Threshold for Minor changes",
     )
     parser.add_argument(
-        "--match_threshold",
+        "--match-threshold",
         type=float,
         default=60.0,
         help="Threshold for Major changes",
@@ -138,22 +139,22 @@ def check_language_parse_args() -> CheckLanguageArgs:
         help="Target language code, such as en-US or uk-UA. Defaults to auto.",
     )
     parser.add_argument(
-        "--api_url",
-        default="https://api.languagetool.org/v2",
+        "--api-url",
+        default="http://localhost:8010/v2",
         help="LanguageTool API URL",
     )
     parser.add_argument(
-        "--api_username",
+        "--api-username",
         default=None,
         help="LanguageTool API user username",
     )
     parser.add_argument(
-        "--api_key",
+        "--api-key",
         default=None,
         help="LanguageTool API key",
     )
     parser.add_argument(
-        "--disabled_rules",
+        "--disabled-rules",
         nargs="*",
         default=[],
         help="List of LanguageTool rule IDs to ignore.",
@@ -165,10 +166,16 @@ def check_language_parse_args() -> CheckLanguageArgs:
         help="List of words to ignore.",
     )
     parser.add_argument(
-        "--max_workers",
+        "--items-workers",
         type=int,
         default=4,
         help="Number of concurrent threads for API requests.",
+    )
+    parser.add_argument(
+        "--file-workers",
+        type=int,
+        default=4,
+        help="Number of concurrent threads for files readers.",
     )
 
     return CheckLanguageArgs.from_namespace(parser.parse_args())

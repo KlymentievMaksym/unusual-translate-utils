@@ -9,14 +9,14 @@ from translate_utils.core.exceptions import LanguageToolConnectionError, Languag
 class LanguageToolClient:
     def __init__(
         self,
-        api_url: str = "https://api.languagetool.org/v2",
+        api_url: str = "http://localhost:8010/v2",
         api_username: str | None = None,
         api_key: str | None = None,
         language: str = "auto",
         disabled_rules: list[str] | None = None,
         dicts: list[str] | None = None,
         max_workers: int = 20,
-        timeout: int = 60,
+        timeout: tuple[float, float] = (3.05, 60.0),
     ) -> None:
 
         self.api_url = api_url
