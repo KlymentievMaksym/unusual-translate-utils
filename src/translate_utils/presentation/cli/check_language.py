@@ -1,9 +1,6 @@
 import concurrent.futures
-from collections import defaultdict
 from pathlib import Path
 
-from translate_utils.core.entities import ReplacementEntity, RuleEntity
-from translate_utils.core.rules import IsSymbolOnlySpec
 from translate_utils.infrastructure.caching.cache import CachedFileReader
 from translate_utils.infrastructure.composition.factories import (
     create_default_parser,
@@ -23,6 +20,7 @@ from translate_utils.infrastructure.language_tools.language_tool import Language
 from translate_utils.infrastructure.logging.logger import setup_logging
 from translate_utils.infrastructure.parsing.renpy.processors import RenpyProcessor
 from translate_utils.infrastructure.parsing.renpy.regexes import RE_SIMPLE_TAGS
+from translate_utils.infrastructure.reporting.reporter import LanguageCheckLogReporter
 from translate_utils.presentation.cli.args import check_language_parse_args
 from translate_utils.services.language_check_service import LanguageCheckService
 from translate_utils.services.orchestrators import BatchLanguageCheckOrchestrator
@@ -49,27 +47,25 @@ def check_language() -> None:
         LOGGER.warning("No .rpy files found to process.")
         return
 
-    LOGGER.info(f"Found {len(rpy_files)} files. Running LanguageTool checks...")
+    LOGGER.info(f"Found {len(rpy_files)} files. Running LanguageTool checks to {args.api_url}...")
 
     file_reader = CachedFileReader(read_renpy_file)
-    dicts = (
-        args.dicts
-        if args.dicts != []
-        else file_reader(DEFAULT_LANGUAGE_EXCEPTIONS_FILE).splitlines()
-    )
-    LOGGER.info(f"Ignoring words: {dicts}")
 
     parser = create_default_parser()
+
     checker = LanguageToolClient(
         api_url=args.api_url,
         api_username=args.api_username,
         api_key=args.api_key,
         language=args.language,
         disabled_rules=args.disabled_rules,
-        dicts=dicts,
-        max_workers=args.max_workers,
+        dicts=args.dicts,
+        max_workers=args.items_workers,
     )
-    dicts = list(dct.lower() for dct in dicts) if dicts is not None else []
+
+    dicts = file_reader(DEFAULT_LANGUAGE_EXCEPTIONS_FILE).splitlines()
+    dicts = list(dct.lower() for dct in dicts) if dicts is not None else dicts
+    LOGGER.info(f"Ignoring words: {dicts}")
 
     validator = create_default_validator()
 
@@ -79,89 +75,34 @@ def check_language() -> None:
         language_checker=checker,
         processor=RenpyProcessor(RE_strip_tags=RE_SIMPLE_TAGS),
         validator=validator,
-        item_workers=args.max_workers,
+        dicts=dicts,
+        item_workers=args.items_workers,
+    )
+
+    reporter = LanguageCheckLogReporter(
+        output_dir=DEFAULT_DIR_FOR_CHECK_LOGS, file_writer=write_renpy_file
     )
 
     orchestrator = BatchLanguageCheckOrchestrator(
         service=check_service,
+        file_reporter=reporter,
         executor_factory=lambda: concurrent.futures.ThreadPoolExecutor(
-            max_workers=args.max_workers
+            max_workers=args.file_workers
         ),
     )
 
-    results = orchestrator.execute(rpy_files)
-    LOGGER.info("Check done")
+    try:
+        results = orchestrator.execute(rpy_files)
+        LOGGER.info("Check done")
+    except KeyboardInterrupt:
+        LOGGER.error("Execution interrupted by user (Ctrl+C). Exiting clean.")
+        return
 
-    next_line = "\n"
-    global_separator = "=" * 60 + next_line
-    local_separator = "_" * 30 + next_line
-
-    for file_results in results.file_results:
-        text = global_separator
-        for key, matches in file_results.matches.items():
-            _match = matches[0]
-            context_text = _match.original_text
-            underliner = list(" " * len(context_text))
-
-            replacements: dict[ReplacementEntity, list[str]] = defaultdict(list)
-            rules: dict[ReplacementEntity, RuleEntity] = defaultdict()
-
-            break_for = [False] * len(matches)
-            for index, match in enumerate(matches):
-                global_offset = match.offset
-
-                flagged_word = context_text[global_offset : global_offset + match.length].lower()
-
-                if flagged_word in dicts:
-                    break_for[index] = True
-                    continue
-
-                if match.rule_id == "COMMA_PARENTHESIS_WHITESPACE" and IsSymbolOnlySpec(
-                    RenpyProcessor()
-                ).is_satisfied_by(flagged_word, ""):
-                    break_for[index] = True
-                    continue
-
-                replacement_entity = ReplacementEntity(
-                    global_offset=global_offset, word=flagged_word
-                )
-
-                rule_entity = RuleEntity(id=match.rule_id, message=match.message)
-
-                underliner[global_offset : global_offset + match.length] = "-" * match.length
-                replacements[replacement_entity].extend(match.replacements)
-                rules[replacement_entity] = rule_entity
-
-            if all(break_for):
-                continue
-
-            text += "Key: " + key + next_line
-            text += local_separator
-
-            text += context_text + next_line
-
-            text += "".join(underliner) + next_line
-
-            text += local_separator
-            for replacement_entity, replacement in replacements.items():
-                rule_entity = rules[replacement_entity]
-                text += (
-                    f"{replacement_entity.word}:{replacement_entity.global_offset}: "
-                    f"{', '.join(replacement)}"
-                ) + next_line
-                text += "Rule id: " + rule_entity.id + next_line
-                text += "Rule message: " + rule_entity.message + next_line
-                text += local_separator
-
-            text += next_line + global_separator
-
-        result_file = Path(file_results.filepath).stem + ".log"
-        write_renpy_file(DEFAULT_DIR_FOR_CHECK_LOGS / result_file, text)
-
-        LOGGER.info(f"Saved {file_results.filepath} results to {result_file}")
-
-    # progress_data = LanguageCheckReportData(results)
-    # LanguageCheckTerminalReport(progress_data).display()
+    for file_result in results.file_results:
+        result_file = file_result.filepath.stem + ".log"
+        LOGGER.info(
+            f"Saved {file_result.filepath} {len(file_result.matches)} results to {result_file}"
+        )
 
     if results.failed_files:
         LOGGER.warning(f"Encountered errors in {len(results.failed_files)} files:")
