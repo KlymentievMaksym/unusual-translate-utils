@@ -91,6 +91,8 @@ class LanguageMatch:
     original_text: str
     offset: int
     length: int
+    issue_type: str
+    category_id: str
 
 
 @dataclass

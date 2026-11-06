@@ -19,6 +19,7 @@ from translate_utils.core.entities import (
     Progress,
     TranslationStats,
 )
+from translate_utils.core.interfaces import ReportStrategy
 from translate_utils.infrastructure.logging.logger import get_logger
 from translate_utils.services.language_check_service import LanguageCheckService
 from translate_utils.services.ports import ExecutorFactory
@@ -78,13 +79,18 @@ class BatchLanguageCheckOrchestrator:
     def __init__(
         self,
         service: LanguageCheckService,
+        file_reporter: ReportStrategy | None = None,
         executor_factory: ExecutorFactory | None = None,
     ) -> None:
-        self.service = service
-        self.executor_factory = executor_factory or concurrent.futures.ThreadPoolExecutor
+        self._service = service
+        self._file_reporter = file_reporter
+        self._executor_factory = executor_factory or concurrent.futures.ThreadPoolExecutor
 
     def execute(self, files: list[Path]) -> LanguageCheckResults:
         results = LanguageCheckResults()
+        executor = self._executor_factory()
+        should_wait = True
+        should_cancel_futures = False
 
         with RichProgress(
             SpinnerColumn(),
@@ -97,9 +103,9 @@ class BatchLanguageCheckOrchestrator:
         ) as progress:
             overall_task = progress.add_task("[bold green]Overall Files", total=len(files))
 
-            with self.executor_factory() as executor:
+            try:
                 future_to_file = {
-                    executor.submit(self.service.check_file, file_path, progress): file_path
+                    executor.submit(self._service.check_file, file_path, progress): file_path
                     for file_path in files
                 }
 
@@ -108,9 +114,18 @@ class BatchLanguageCheckOrchestrator:
                     try:
                         file_result = future.result()
                         results.file_results.append(file_result)
+                        if self._file_reporter is not None:
+                            self._file_reporter(file_result)
                     except Exception as exc:
                         results.failed_files[str(file_path)] = str(exc)
                     finally:
                         progress.advance(overall_task)
+            except KeyboardInterrupt:
+                LOGGER.warning("Cancellation requested. Stopping running tasks...")
+                should_wait = False
+                should_cancel_futures = True
+                raise
+            finally:
+                executor.shutdown(wait=should_wait, cancel_futures=should_cancel_futures)
 
         return results
