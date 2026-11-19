@@ -52,12 +52,22 @@ def write_json_file(filepath: str | Path, content: Any) -> None:
 
 def gather_extension_files(paths: list[Path], extension: str = "rpy") -> list[Path]:
     """
-    Scans provided paths and returns a sorted list of **.extension** files.
+    Scans provided paths and returns a sorted, deduplicated list of **.extension** files.
     """
-    rpy_files = []
+    rpy_files: list[Path] = []
+    seen_resolved: set[Path] = set()
+
+    def _add_if_new(candidate: Path) -> None:
+        resolved = candidate.resolve()
+        if resolved not in seen_resolved:
+            seen_resolved.add(resolved)
+            rpy_files.append(candidate)
+
     for target_path in paths:
         if target_path.is_file() and target_path.suffix == f".{extension}":
-            rpy_files.append(target_path)
+            _add_if_new(target_path)
         elif target_path.is_dir():
-            rpy_files.extend(target_path.rglob(f"*.{extension}"))
+            for found in sorted(target_path.rglob(f"*.{extension}")):
+                _add_if_new(found)
+
     return sorted(rpy_files, key=lambda path: path.name)

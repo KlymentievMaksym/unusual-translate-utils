@@ -5,7 +5,12 @@ from pathlib import Path
 from rich.progress import Progress as RichProgress
 from rich.progress import TaskID
 
-from translate_utils.core.entities import FileCheckResult, LanguageMatch, TranslationsDicts
+from translate_utils.core.entities import (
+    FileCheckResult,
+    LanguageMatch,
+    LineRange,
+    TranslationsDicts,
+)
 from translate_utils.core.exceptions import LanguageToolError
 from translate_utils.core.interfaces import ParseStrategy, ReadStrategy, TextProcessor
 from translate_utils.core.rules import IsSymbolOnlySpec, TranslationValidator
@@ -101,15 +106,41 @@ class LanguageCheckService:
 
         return matches
 
-    def check_file(self, filepath: Path, progress: RichProgress | None = None) -> FileCheckResult:
+    def check_file(
+        self,
+        filepath: Path,
+        progress: RichProgress | None = None,
+        line_ranges: list[LineRange] | None = None,
+        labels: set[str] | None = None,
+        disable_check_strings: bool = False,
+    ) -> FileCheckResult:
+
         content = self._file_reader(filepath)
         parsed_data = self._file_parser(content)
-        result = FileCheckResult(filepath=filepath)
+        is_filtered = bool(line_ranges) or bool(labels) or disable_check_strings
+        result = FileCheckResult(filepath=filepath, is_filtered=is_filtered)
+
+        def _overlaps_line_ranges(start_line: int, end_line: int) -> bool:
+            if not line_ranges:
+                return False
+            return any(line_range.overlaps(start_line, end_line) for line_range in line_ranges)
 
         items_to_check: list[tuple[str, str]] = []
+        has_dialogue_filter = bool(line_ranges) or bool(labels)
 
         if parsed_data.dialogues:
             for key, dialogue in parsed_data.dialogues.items():
+                if has_dialogue_filter:
+                    full_label = f"{dialogue.script_label}_{dialogue.script_hash}"
+                    matches_label = bool(labels) and (
+                        dialogue.script_label in labels or full_label in labels
+                        if labels is not None
+                        else False
+                    )
+                    matches_line = _overlaps_line_ranges(dialogue.start_line, dialogue.end_line)
+                    if not (matches_label or matches_line):
+                        continue
+
                 original = dialogue.original_text
                 translation = dialogue.translation_text
                 if (
@@ -119,8 +150,16 @@ class LanguageCheckService:
                 ):
                     items_to_check.append((key, translation))
 
-        if parsed_data.strings:
+        should_check_strings = not disable_check_strings or bool(line_ranges)
+        if parsed_data.strings and should_check_strings:
             for key, string_val in parsed_data.strings.items():
+                if line_ranges:
+                    line_span = parsed_data.string_lines.get(key)
+                    if line_span is not None and not _overlaps_line_ranges(
+                        line_span[0], line_span[1]
+                    ):
+                        continue
+
                 if (
                     string_val
                     and self._validator

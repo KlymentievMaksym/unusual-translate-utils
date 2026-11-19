@@ -1,4 +1,5 @@
 import concurrent.futures
+from collections.abc import Mapping
 from pathlib import Path
 
 from rich.progress import (
@@ -16,6 +17,7 @@ from rich.progress import (
 from translate_utils.core.entities import (
     FileProgressSummary,
     LanguageCheckResults,
+    LineRange,
     Progress,
     TranslationStats,
 )
@@ -86,7 +88,13 @@ class BatchLanguageCheckOrchestrator:
         self._file_reporter = file_reporter
         self._executor_factory = executor_factory or concurrent.futures.ThreadPoolExecutor
 
-    def execute(self, files: list[Path]) -> LanguageCheckResults:
+    def execute(
+        self,
+        files: list[Path],
+        file_line_ranges: Mapping[Path, list[LineRange]] | None = None,
+        labels: set[str] | None = None,
+        disable_check_strings: bool = False,
+    ) -> LanguageCheckResults:
         results = LanguageCheckResults()
         executor = self._executor_factory()
         should_wait = True
@@ -105,7 +113,14 @@ class BatchLanguageCheckOrchestrator:
 
             try:
                 future_to_file = {
-                    executor.submit(self._service.check_file, file_path, progress): file_path  # type: ignore
+                    executor.submit(
+                        self._service.check_file,
+                        file_path,
+                        progress,
+                        file_line_ranges.get(file_path) if file_line_ranges else None,
+                        labels,
+                        disable_check_strings,
+                    ): file_path
                     for file_path in files
                 }
 
@@ -126,6 +141,6 @@ class BatchLanguageCheckOrchestrator:
                 should_cancel_futures = True
                 raise
             finally:
-                executor.shutdown(wait=should_wait, cancel_futures=should_cancel_futures)  # type: ignore
+                executor.shutdown(wait=should_wait, cancel_futures=should_cancel_futures)
 
         return results

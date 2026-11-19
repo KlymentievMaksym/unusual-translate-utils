@@ -4,6 +4,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
+@dataclass(frozen=True, slots=True)
+class LineRange:
+    start: int = 1
+    end: int | None = None
+
+    def overlaps(self, block_start: int, block_end: int) -> bool:
+        if block_end < self.start:
+            return False
+        return not (self.end is not None and block_start > self.end)
+
+
 @dataclass(slots=True, frozen=True)
 class Progress:
     translated: int = 0
@@ -36,6 +47,8 @@ class DialogueLine:
     original_text: str
     translation_character: str | None
     translation_text: str
+    start_line: int = 0
+    end_line: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,6 +92,7 @@ class TranslationStats:
 class TranslationsDicts:
     dialogues: dict[str, DialogueLine]
     strings: dict[str, str]
+    string_lines: dict[str, tuple[int, int]] = field(default_factory=dict)
 
 
 @dataclass
@@ -99,6 +113,12 @@ class LanguageMatch:
 class FileCheckResult:
     filepath: Path
     matches: dict[str, list[LanguageMatch]] = field(default_factory=dict)
+    is_filtered: bool = False
+
+    @property
+    def log_filename(self) -> str:
+        suffix = "_specified.log" if self.is_filtered else ".log"
+        return f"{self.filepath.stem}{suffix}"
 
 
 @dataclass

@@ -20,7 +20,7 @@ class LanguageCheckLogReporter(ReportStrategy):
 
     def format_file_result(self, file_results: FileCheckResult) -> str:
         text = self._global_separator
-        for key, matches in file_results.matches.items():
+        for key, matches in sorted(file_results.matches.items(), key=lambda x: x[0], reverse=True):
             if not matches:
                 continue
 
@@ -64,7 +64,7 @@ class LanguageCheckLogReporter(ReportStrategy):
             for replacement_entity, replacement in replacements.items():
                 rule_entity = rules[replacement_entity]
                 repl_str = ", ".join(replacement)
-                text += f"Word: {replacement_entity.word}:{replacement_entity.global_offset}"
+                text += f"Word: {replacement_entity.word}:{replacement_entity.global_offset}{self._next_line}"
                 text += f"Recomendation: {repl_str}{self._next_line}"
                 text += f"Rule id: {rule_entity.id}{self._next_line}"
                 text += f"Rule message: {rule_entity.message}{self._next_line}"
@@ -74,15 +74,11 @@ class LanguageCheckLogReporter(ReportStrategy):
 
         return text
 
-    def __call__(self, file_result: FileCheckResult) -> None:  # type: ignore
+    def __call__(self, file_result: FileCheckResult) -> None:
         if not file_result.matches:
             return
 
         text = self.format_file_result(file_result)
-        result_file = file_result.filepath.stem + ".log"
-        destination = self._output_dir / result_file
+        destination = self._output_dir / file_result.log_filename
 
         self._file_writer(filepath=destination, content=text)
-        # LOGGER.info(
-        #     f"Saved {file_result.filepath} {len(file_result.matches)} results to {result_file}"
-        # )
