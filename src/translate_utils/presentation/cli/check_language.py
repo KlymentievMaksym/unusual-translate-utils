@@ -91,17 +91,30 @@ def check_language() -> None:
         ),
     )
 
+    file_line_ranges = {
+        rpy_file: ranges
+        for rpy_file in rpy_files
+        if (ranges := args.resolve_line_ranges(rpy_file)) is not None
+    }
+
     try:
-        results = orchestrator.execute(rpy_files)
+        results = orchestrator.execute(
+            rpy_files,
+            file_line_ranges=file_line_ranges,
+            labels=args.labels,
+            disable_check_strings=args.disable_check_strings,
+        )
         LOGGER.info("Check done")
     except KeyboardInterrupt:
         LOGGER.error("Execution interrupted by user (Ctrl+C). Exiting clean.")
         return
 
     for file_result in results.file_results:
-        result_file = file_result.filepath.stem + ".log"
+        result_path = DEFAULT_DIR_FOR_CHECK_LOGS
         LOGGER.info(
-            f"Saved {file_result.filepath} {len(file_result.matches)} results to {result_file}"
+            f"Saved {len(file_result.matches)} results "
+            f'from "{file_result.filepath}" '
+            f"to {result_path / file_result.log_filename}"
         )
 
     if results.failed_files:

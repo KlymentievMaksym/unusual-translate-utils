@@ -2,15 +2,15 @@ from collections import defaultdict
 from pathlib import Path
 
 from translate_utils.core.entities import FileCheckResult, ReplacementEntity, RuleEntity
-from translate_utils.core.interfaces import WriteStrategy
+from translate_utils.core.interfaces import ReportStrategy, WriteStrategy
 from translate_utils.infrastructure.logging.logger import get_logger
 from translate_utils.infrastructure.reporting.formatters import get_underline_char
 
 LOGGER = get_logger(__name__)
 
 
-class LanguageCheckLogReporter:
-    def __init__(self, output_dir: Path, file_writer: WriteStrategy) -> None:
+class LanguageCheckLogReporter(ReportStrategy):
+    def __init__(self, output_dir: Path, file_writer: WriteStrategy[str]) -> None:
         self._output_dir = output_dir
         self._file_writer = file_writer
 
@@ -20,7 +20,7 @@ class LanguageCheckLogReporter:
 
     def format_file_result(self, file_results: FileCheckResult) -> str:
         text = self._global_separator
-        for key, matches in file_results.matches.items():
+        for key, matches in sorted(file_results.matches.items(), key=lambda x: x[0], reverse=True):
             if not matches:
                 continue
 
@@ -64,7 +64,7 @@ class LanguageCheckLogReporter:
             for replacement_entity, replacement in replacements.items():
                 rule_entity = rules[replacement_entity]
                 repl_str = ", ".join(replacement)
-                text += f"Word: {replacement_entity.word}:{replacement_entity.global_offset}"
+                text += f"Word: {replacement_entity.word}:{replacement_entity.global_offset}{self._next_line}"
                 text += f"Recomendation: {repl_str}{self._next_line}"
                 text += f"Rule id: {rule_entity.id}{self._next_line}"
                 text += f"Rule message: {rule_entity.message}{self._next_line}"
@@ -79,10 +79,6 @@ class LanguageCheckLogReporter:
             return
 
         text = self.format_file_result(file_result)
-        result_file = file_result.filepath.stem + ".log"
-        destination = self._output_dir / result_file
+        destination = self._output_dir / file_result.log_filename
 
         self._file_writer(filepath=destination, content=text)
-        # LOGGER.info(
-        #     f"Saved {file_result.filepath} {len(file_result.matches)} results to {result_file}"
-        # )
