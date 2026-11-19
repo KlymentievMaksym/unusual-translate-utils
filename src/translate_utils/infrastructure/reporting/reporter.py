@@ -2,15 +2,15 @@ from collections import defaultdict
 from pathlib import Path
 
 from translate_utils.core.entities import FileCheckResult, ReplacementEntity, RuleEntity
-from translate_utils.core.interfaces import WriteStrategy
+from translate_utils.core.interfaces import ReportStrategy, WriteStrategy
 from translate_utils.infrastructure.logging.logger import get_logger
 from translate_utils.infrastructure.reporting.formatters import get_underline_char
 
 LOGGER = get_logger(__name__)
 
 
-class LanguageCheckLogReporter:
-    def __init__(self, output_dir: Path, file_writer: WriteStrategy) -> None:
+class LanguageCheckLogReporter(ReportStrategy):
+    def __init__(self, output_dir: Path, file_writer: WriteStrategy[str]) -> None:
         self._output_dir = output_dir
         self._file_writer = file_writer
 
@@ -74,7 +74,7 @@ class LanguageCheckLogReporter:
 
         return text
 
-    def __call__(self, file_result: FileCheckResult) -> None:
+    def __call__(self, file_result: FileCheckResult) -> None:  # type: ignore
         if not file_result.matches:
             return
 

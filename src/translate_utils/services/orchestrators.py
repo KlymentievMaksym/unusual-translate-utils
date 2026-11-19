@@ -105,7 +105,7 @@ class BatchLanguageCheckOrchestrator:
 
             try:
                 future_to_file = {
-                    executor.submit(self._service.check_file, file_path, progress): file_path
+                    executor.submit(self._service.check_file, file_path, progress): file_path  # type: ignore
                     for file_path in files
                 }
 
@@ -126,6 +126,6 @@ class BatchLanguageCheckOrchestrator:
                 should_cancel_futures = True
                 raise
             finally:
-                executor.shutdown(wait=should_wait, cancel_futures=should_cancel_futures)
+                executor.shutdown(wait=should_wait, cancel_futures=should_cancel_futures)  # type: ignore
 
         return results

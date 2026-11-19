@@ -146,7 +146,7 @@ class LanguageCheckService:
         try:
             future_to_key = {
                 executor.submit(self._check_single_item, key, text): key
-                for key, text in items_to_check[:3]
+                for key, text in items_to_check
             }
             for future in concurrent.futures.as_completed(future_to_key):
                 item_matches = future.result()
