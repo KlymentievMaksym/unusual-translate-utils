@@ -17,6 +17,7 @@ from translate_utils.infrastructure.filesystem.path import (
     DEFAULT_LANGUAGE_EXCEPTIONS_FILE,
 )
 from translate_utils.infrastructure.language_tools.language_tool import LanguageToolClient
+from translate_utils.infrastructure.language_tools.normalizers import StutterNormalizer
 from translate_utils.infrastructure.logging.logger import setup_logging
 from translate_utils.infrastructure.parsing.renpy.processors import RenpyProcessor
 from translate_utils.infrastructure.parsing.renpy.regexes import RE_SIMPLE_TAGS
@@ -75,6 +76,7 @@ def check_language() -> None:
         language_checker=checker,
         processor=RenpyProcessor(RE_strip_tags=RE_SIMPLE_TAGS),
         validator=validator,
+        normalizer=StutterNormalizer(),
         dicts=dicts,
         item_workers=args.items_workers,
     )
