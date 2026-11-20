@@ -12,9 +12,15 @@ from translate_utils.core.entities import (
     TranslationsDicts,
 )
 from translate_utils.core.exceptions import LanguageToolError
-from translate_utils.core.interfaces import ParseStrategy, ReadStrategy, TextProcessor
+from translate_utils.core.interfaces import (
+    ParseStrategy,
+    ReadStrategy,
+    TextNormalizer,
+    TextProcessor,
+)
 from translate_utils.core.rules import IsSymbolOnlySpec, TranslationValidator
 from translate_utils.infrastructure.language_tools.language_tool import LanguageToolClient
+from translate_utils.infrastructure.language_tools.normalizers import RE_LEADING_GLUED_DASH_WORD
 from translate_utils.infrastructure.logging.logger import get_logger
 from translate_utils.infrastructure.parsing.renpy.processors import RenpyProcessor
 from translate_utils.infrastructure.parsing.renpy.regexes import (
@@ -36,14 +42,37 @@ class LanguageCheckService:
         processor: TextProcessor | None = None,
         dicts: list[str] | None = None,
         item_workers: int = 20,
+        normalizer: TextNormalizer | None = None,
     ) -> None:
         self._file_reader = file_reader
         self._file_parser = file_parser
         self._language_checker = language_checker
         self._validator = validator
         self._processor = processor
+        self._normalizer = normalizer
         self._dicts = dicts if dicts is not None else []
         self._item_workers = item_workers
+
+    @staticmethod
+    def _substitute_renpy_vars(text: str) -> str:
+        substituted = text.replace("[mc]", NAME_FORM_MAP["default"])
+        return RE_NAME_FORM.sub(name_form_replacer, substituted)
+
+    def _collect_suppressed_uppercase_starts(
+        self, pre_normalized_text: str
+    ) -> set[tuple[str, str]]:
+        if self._normalizer is None:
+            return set()
+
+        suppressed: set[tuple[str, str]] = set()
+        for match in RE_LEADING_GLUED_DASH_WORD.finditer(pre_normalized_text):
+            normalized_prefix = self._substitute_renpy_vars(
+                self._normalizer.normalize(pre_normalized_text[: match.start()])
+            )
+            normalized_word = self._normalizer.normalize(match.group(1))
+            suppressed.add((normalized_prefix, normalized_word))
+
+        return suppressed
 
     def _check_single_item(self, key: str, raw_text: str) -> list[LanguageMatch]:
         clean_text = raw_text
@@ -54,12 +83,21 @@ class LanguageCheckService:
             return []
 
         clean_text = (
-            clean_text.replace("\\n", " ")
+            clean_text.replace("\\n ", " ")
+            .replace("\\n", " ")
+            .replace("\\t ", " ")
             .replace("\\t", " ")
             .replace("[[", "[")
-            .replace("[mc]", NAME_FORM_MAP["default"])
         )
-        clean_text = RE_NAME_FORM.sub(name_form_replacer, clean_text)
+
+        pre_normalized_text = clean_text
+        if self._normalizer is not None:
+            clean_text = self._normalizer.normalize(clean_text)
+
+        clean_text = self._substitute_renpy_vars(clean_text)
+        suppressed_uppercase_starts = self._collect_suppressed_uppercase_starts(
+            pre_normalized_text
+        )
 
         matches: list[LanguageMatch] = []
         try:
@@ -75,6 +113,13 @@ class LanguageCheckService:
                 flagged_word = context_text[offset : offset + length].lower()
 
                 if flagged_word in self._dicts:
+                    continue
+
+                if (
+                    rule_id == "UPPERCASE_SENTENCE_START"
+                    and (clean_text[:offset], clean_text[offset : offset + length])
+                    in suppressed_uppercase_starts
+                ):
                     continue
 
                 if rule_id == "COMMA_PARENTHESIS_WHITESPACE" and IsSymbolOnlySpec(

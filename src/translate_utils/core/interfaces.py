@@ -16,6 +16,12 @@ class TextProcessor(Protocol):
     def extract_words(self, text: str) -> list[str]: ...
 
 
+class TextNormalizer(Protocol):
+    """Protocol for normalizing text artifacts before grammar checking."""
+
+    def normalize(self, text: str) -> str: ...
+
+
 class CleanStrategy(Protocol):
     """
     Strategy for cleaning or modifying extracted text blocks.
