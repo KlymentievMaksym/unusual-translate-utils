@@ -57,10 +57,10 @@ class WriteStrategy(Protocol[T_in]):
     def __call__(self, filepath: str | Path, content: T_in) -> None: ...
 
 
-class ReportStrategy(Protocol):
+class ReportStrategy(Protocol[T_in]):
     """Defines how to report data to a storage medium."""
 
-    def __call__(self, *args: object) -> None: ...
+    def __call__(self, data: T_in, /) -> None: ...
 
 
 class MatchExtractorFunc(Protocol):
