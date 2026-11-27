@@ -1,22 +1,24 @@
+import io
 import logging
 import sys
 from datetime import datetime
+from pathlib import Path
 
-from translate_utils.infrastructure.filesystem.path import DEFAULT_DIR_FOR_LOGS, create_default_dirs
 from translate_utils.infrastructure.logging.log_cleaner import cleanup_old_logs
 
 
-def setup_logging(command_name: str) -> logging.Logger:
-    create_default_dirs()
-    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
-    cleanup_old_logs(DEFAULT_DIR_FOR_LOGS, max_files=10)
+def setup_logging(command_name: str, logs_dir: Path, max_files: int = 10) -> logging.Logger:
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8")
+
+    cleanup_old_logs(logs_dir, max_files=max_files)
 
     curr_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    log_file = logs_dir / f"{command_name}_{curr_time}.log"
     handlers: list[logging.Handler] = [
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler(
-            filename=DEFAULT_DIR_FOR_LOGS / f"{command_name}_{curr_time}.log", encoding="utf-8"
-        ),
+        logging.FileHandler(filename=log_file, encoding="utf-8"),
     ]
 
     logging.basicConfig(

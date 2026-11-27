@@ -1,22 +1,22 @@
 # ------------------------------------------------------------------------------
 # Platform Detection & Utility Setup
 # ------------------------------------------------------------------------------
+IS_POSIX_SHELL := $(findstring sh,$(notdir $(SHELL)))
+
 ifeq ($(OS), Windows_NT)
-    ifdef MSYSTEM
-        HAS_UV := $(strip $(shell uv --version 2> /dev/null))
-        HAS_PYTHON := $(strip $(shell py --version 2> /dev/null))
+    HAS_UV := $(strip $(shell uv --version))
+    HAS_PYTHON := $(strip $(shell py --version))
+    VENV_CMD = py -m
+    ifneq ($(IS_POSIX_SHELL),)
         VENV_PYTHON := .venv/Scripts/python
         CLEAN_CMD = rm -rf
     else
-        HAS_UV := $(strip $(shell uv --version 2> nul))
-        HAS_PYTHON := $(strip $(shell py --version 2> nul))
         VENV_PYTHON := .venv\Scripts\python
         CLEAN_CMD = cmd /c rmdir /s /q
     endif
-    VENV_CMD = py -m
 else
-    HAS_UV := $(strip $(shell uv --version 2> /dev/null))
-    HAS_PYTHON := $(strip $(shell python3 --version 2> /dev/null))
+    HAS_UV := $(strip $(shell uv --version))
+    HAS_PYTHON := $(strip $(shell python3 --version))
     VENV_PYTHON := .venv/bin/python
     CLEAN_CMD = rm -rf
     VENV_CMD = python3 -m
@@ -28,7 +28,7 @@ TOUCH_CMD = $(VENV_PYTHON) -c "import pathlib,sys; pathlib.Path(sys.argv[1]).tou
 # Command Routing (uv vs standard python)
 # ------------------------------------------------------------------------------
 ifneq ($(HAS_UV),)
-    RUN_CMD = uv run
+    RUN_CMD = uv run --no-sync
     VENV_CMD = uv
     PIP_INSTALL_CMD = $(VENV_CMD) pip install
 else ifneq ($(HAS_PYTHON),)
@@ -90,8 +90,8 @@ fix: .venv/check-installed
 
 clean:
 	$(CLEAN_CMD) .venv
-	$(CLEAN_CMD) .pytest_cache 2> nul || true
-	$(CLEAN_CMD) .mypy_cache 2> nul || true
+	$(CLEAN_CMD) .pytest_cache || true
+	$(CLEAN_CMD) .mypy_cache || true
 
 # Testing
 test: .venv/test-installed

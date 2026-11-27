@@ -15,6 +15,7 @@ from rich.progress import (
 )
 
 from translate_utils.core.entities import (
+    FileCheckResult,
     FileProgressSummary,
     LanguageCheckResults,
     LineRange,
@@ -81,7 +82,7 @@ class BatchLanguageCheckOrchestrator:
     def __init__(
         self,
         service: LanguageCheckService,
-        file_reporter: ReportStrategy | None = None,
+        file_reporter: ReportStrategy[FileCheckResult] | None = None,
         executor_factory: ExecutorFactory | None = None,
     ) -> None:
         self._service = service

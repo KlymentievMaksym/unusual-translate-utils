@@ -95,9 +95,7 @@ class LanguageCheckService:
             clean_text = self._normalizer.normalize(clean_text)
 
         clean_text = self._substitute_renpy_vars(clean_text)
-        suppressed_uppercase_starts = self._collect_suppressed_uppercase_starts(
-            pre_normalized_text
-        )
+        suppressed_uppercase_starts = self._collect_suppressed_uppercase_starts(pre_normalized_text)
 
         matches: list[LanguageMatch] = []
         try:
@@ -110,7 +108,7 @@ class LanguageCheckService:
                 rule_id = rule.get("id", "UNKNOWN_RULE")
 
                 context_text = match.get("context", {}).get("text", clean_text)
-                flagged_word = context_text[offset : offset + length].lower()
+                flagged_word = clean_text[offset : offset + length].lower()
 
                 if flagged_word in self._dicts:
                     continue

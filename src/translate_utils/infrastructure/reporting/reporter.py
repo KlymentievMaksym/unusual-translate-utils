@@ -9,7 +9,7 @@ from translate_utils.infrastructure.reporting.formatters import get_underline_ch
 LOGGER = get_logger(__name__)
 
 
-class LanguageCheckLogReporter(ReportStrategy):
+class LanguageCheckLogReporter(ReportStrategy[FileCheckResult]):
     def __init__(self, output_dir: Path, file_writer: WriteStrategy[str]) -> None:
         self._output_dir = output_dir
         self._file_writer = file_writer
@@ -64,7 +64,10 @@ class LanguageCheckLogReporter(ReportStrategy):
             for replacement_entity, replacement in replacements.items():
                 rule_entity = rules[replacement_entity]
                 repl_str = ", ".join(replacement)
-                text += f"Word: {replacement_entity.word}:{replacement_entity.global_offset}{self._next_line}"
+                text += (
+                    f"Word: {replacement_entity.word}:{replacement_entity.global_offset}"
+                    f"{self._next_line}"
+                )
                 text += f"Recomendation: {repl_str}{self._next_line}"
                 text += f"Rule id: {rule_entity.id}{self._next_line}"
                 text += f"Rule message: {rule_entity.message}{self._next_line}"

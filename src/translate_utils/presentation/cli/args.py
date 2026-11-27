@@ -231,7 +231,10 @@ def check_language_parse_args() -> CheckLanguageArgs:
     parser.add_argument(
         "filepaths",
         nargs="*",
-        help="Files or directories to check, optionally suffixed with :lines such as script.rpy:10-50.",
+        help=(
+            "Files or directories to check, "
+            "optionally suffixed with :lines such as script.rpy:10-50."
+        ),
     )
     parser.add_argument(
         "--lines",
@@ -309,7 +312,7 @@ def check_language_parse_args() -> CheckLanguageArgs:
             except ValueError as exc:
                 parser.error(str(exc))
 
-    parsed_labels: frozenset[str] | None = None
+    parsed_labels: set[str] | None = None
     if namespace.labels is not None:
         label_tokens: list[str] = []
         for token in namespace.labels:
@@ -317,7 +320,7 @@ def check_language_parse_args() -> CheckLanguageArgs:
                 label_tokens.extend(parse_labels_spec(token))
             except ValueError as exc:
                 parser.error(str(exc))
-        parsed_labels = frozenset(label_tokens)
+        parsed_labels = set(label_tokens)
 
     cleaned_filepaths: list[str] = []
     file_ranges_acc: defaultdict[Path, list[LineRange]] = defaultdict(list)

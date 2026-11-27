@@ -8,8 +8,8 @@ from translate_utils.infrastructure.composition.factories import (
     create_default_parser,
 )
 from translate_utils.infrastructure.filesystem.io import read_renpy_file, write_renpy_file
-from translate_utils.infrastructure.filesystem.path import DEFAULT_DIR_FOR_COMPARE_LOGS
-from translate_utils.infrastructure.logging.logger import setup_logging
+from translate_utils.infrastructure.filesystem.path import initialize_config
+from translate_utils.infrastructure.logging.logger import get_logger, setup_logging
 from translate_utils.infrastructure.parsing.renpy.parser import RegexDialogueParser
 from translate_utils.infrastructure.parsing.renpy.regexes import RE_TRANSLATE_CONFIG
 from translate_utils.presentation.cli.args import compare_dirs_parse_args
@@ -19,12 +19,16 @@ from translate_utils.services.diff_service import ChangeEntry, DialogueSequenceD
 from translate_utils.services.mappers import build_reverse_lookup
 from translate_utils.services.merge_service import MergeService
 
-LOGGER = setup_logging("CompareDirs")
+LOGGER = get_logger("CompareDirs")
 
 
 def compare_dirs() -> None:
-    LOGGER.info("Starting compare process...")
     args = compare_dirs_parse_args()
+    config = initialize_config()
+    setup_logging("CompareDirs", config.paths.common_logs_dir)
+
+    LOGGER.info("Starting compare process...")
+
     if not args.is_suitable_clean_method():
         available_methods_str = ", ".join(AVAILABLE_METHODS)
         LOGGER.warning(
@@ -39,24 +43,6 @@ def compare_dirs() -> None:
 
     LOGGER.info(f"Loading and comparing: {args.dirs}...")
     dir1, dir2 = args.dirs
-    _compare_dirs(
-        dir1=dir1,
-        dir2=dir2,
-        clean_method=clean_method,
-        minor_threshold=args.minor_threshold,
-        match_threshold=args.match_threshold,
-        auto=args.auto,
-    )
-
-
-def _compare_dirs(
-    dir1: str,
-    dir2: str,
-    clean_method: CleanStrategy,
-    minor_threshold: float,
-    match_threshold: float,
-    auto: bool = False,
-) -> None:
     cleaner = create_default_cleaner()
     parser = create_default_parser()
 
@@ -71,7 +57,7 @@ def _compare_dirs(
     compare_service = CompareService(
         file_reader=read_renpy_file, file_parser=parser, file_cleaner=cleaner
     )
-    if auto:
+    if args.auto:
         merge_service = MergeService(file_reader=read_renpy_file, file_writer=write_renpy_file)
 
     compare_results = compare_service.compare_directories(dir1, dir2)
@@ -82,7 +68,7 @@ Identical: {compare_results.identical}
 Changed: {compare_results.changed}
 """
     result_file = "_GLOBAL.log"
-    write_renpy_file(DEFAULT_DIR_FOR_COMPARE_LOGS / result_file, text)
+    write_renpy_file(config.paths.compare_logs_dir / result_file, text)
     LOGGER.info(f"Saved global results to {result_file}")
 
     for filepath in compare_results.changed:
@@ -99,10 +85,10 @@ Changed: {compare_results.changed}
             dial_and_str2 = parser(clean_results2.cleaned_text)
 
             string_diff = StringDiff(
-                min_match_threshold=match_threshold, minor_threshold=minor_threshold
+                min_match_threshold=args.match_threshold, minor_threshold=args.minor_threshold
             )
             dialogue_diff = DialogueSequenceDiff(
-                min_match_threshold=match_threshold, minor_threshold=minor_threshold
+                min_match_threshold=args.match_threshold, minor_threshold=args.minor_threshold
             )
 
             old_dialogues = list(dial_and_str1.dialogues.values())
@@ -111,7 +97,7 @@ Changed: {compare_results.changed}
             dial_diff = dialogue_diff.compare(old_dialogues, new_dialogues)
             str_diff = string_diff.compare(dial_and_str1.strings, dial_and_str2.strings)
 
-            if auto:
+            if args.auto:
                 target_path = Path(dir2) / filepath
                 applied_count = merge_service.apply_unchanged_translations(
                     target_path, dial_diff, str_diff
@@ -176,7 +162,7 @@ Changed: {compare_results.changed}
         except Exception as e:
             LOGGER.critical(f"Unexpected fatal error processing {filepath}: {e}", exc_info=True)
         result_file = Path(filepath).stem + ".log"
-        write_renpy_file(DEFAULT_DIR_FOR_COMPARE_LOGS / result_file, text)
+        write_renpy_file(config.paths.compare_logs_dir / result_file, text)
         LOGGER.info(f"Saved results to {result_file}")
 
 
