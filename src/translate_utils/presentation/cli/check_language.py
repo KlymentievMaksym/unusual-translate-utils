@@ -1,5 +1,4 @@
 import concurrent.futures
-from pathlib import Path
 
 from translate_utils.infrastructure.caching.cache import CachedFileReader
 from translate_utils.infrastructure.composition.factories import (
@@ -11,36 +10,33 @@ from translate_utils.infrastructure.filesystem.io import (
     read_renpy_file,
     write_renpy_file,
 )
-from translate_utils.infrastructure.filesystem.path import (
-    DEFAULT_DIR_FOR_CHECK_LOGS,
-    DEFAULT_DIR_FOR_TRANSLATION,
-    DEFAULT_LANGUAGE_EXCEPTIONS_FILE,
-)
+from translate_utils.infrastructure.filesystem.path import initialize_config
 from translate_utils.infrastructure.language_tools.language_tool import LanguageToolClient
 from translate_utils.infrastructure.language_tools.normalizers import StutterNormalizer
-from translate_utils.infrastructure.logging.logger import setup_logging
+from translate_utils.infrastructure.logging.logger import get_logger, setup_logging
 from translate_utils.infrastructure.parsing.renpy.processors import RenpyProcessor
 from translate_utils.infrastructure.parsing.renpy.regexes import RE_SIMPLE_TAGS
 from translate_utils.infrastructure.reporting.reporter import LanguageCheckLogReporter
 from translate_utils.presentation.cli.args import check_language_parse_args
+from translate_utils.presentation.cli.common import collect_paths
 from translate_utils.services.language_check_service import LanguageCheckService
 from translate_utils.services.orchestrators import BatchLanguageCheckOrchestrator
 
-# from translate_utils.presentation.visualize.mixins import LanguageCheckReportData
-# from translate_utils.presentation.visualize.terminal import LanguageCheckTerminalReport
-
-LOGGER = setup_logging("CheckLanguage")
+LOGGER = get_logger("CheckLanguage")
 
 
 def check_language() -> None:
-    LOGGER.info("Starting language check process...")
     args = check_language_parse_args()
+    config = initialize_config()
+    setup_logging("CheckLanguage", config.paths.common_logs_dir)
 
-    if not args.filepaths:
-        paths_to_check = [DEFAULT_DIR_FOR_TRANSLATION]
-        LOGGER.info(f"No path provided. Defaulting to: {DEFAULT_DIR_FOR_TRANSLATION}")
-    else:
-        paths_to_check = [Path(p) for p in args.filepaths]
+    LOGGER.info("Starting language check process...")
+
+    paths_to_check = collect_paths(
+        args.filepaths,
+        config.settings.dir_for_translation,
+        config.paths.settings_file,
+    )
 
     rpy_files = gather_extension_files(paths_to_check, "rpy")
 
@@ -64,8 +60,8 @@ def check_language() -> None:
         max_workers=args.items_workers,
     )
 
-    dicts = file_reader(DEFAULT_LANGUAGE_EXCEPTIONS_FILE).splitlines()
-    dicts = list(dct.lower() for dct in dicts) if dicts is not None else dicts
+    dicts = file_reader(config.paths.language_exceptions_file).splitlines()
+    dicts = [dct.strip().lower() for dct in dicts if dct.strip()]
     LOGGER.info(f"Ignoring words: {dicts}")
 
     validator = create_default_validator()
@@ -82,7 +78,7 @@ def check_language() -> None:
     )
 
     reporter = LanguageCheckLogReporter(
-        output_dir=DEFAULT_DIR_FOR_CHECK_LOGS, file_writer=write_renpy_file
+        output_dir=config.paths.check_logs_dir, file_writer=write_renpy_file
     )
 
     orchestrator = BatchLanguageCheckOrchestrator(
@@ -112,7 +108,7 @@ def check_language() -> None:
         return
 
     for file_result in results.file_results:
-        result_path = DEFAULT_DIR_FOR_CHECK_LOGS
+        result_path = config.paths.check_logs_dir
         LOGGER.info(
             f"Saved {len(file_result.matches)} results "
             f'from "{file_result.filepath}" '

@@ -4,9 +4,9 @@ from pathlib import Path
 from translate_utils.infrastructure.caching.cache import CachedFileReader
 from translate_utils.infrastructure.composition.factories import create_default_progress_counter
 from translate_utils.infrastructure.filesystem.io import gather_extension_files, read_renpy_file
-from translate_utils.infrastructure.filesystem.path import DEFAULT_DIR_FOR_TRANSLATION
+from translate_utils.infrastructure.filesystem.path import initialize_config
 from translate_utils.infrastructure.filesystem.updater import update_readme_progress
-from translate_utils.infrastructure.logging.logger import setup_logging
+from translate_utils.infrastructure.logging.logger import get_logger, setup_logging
 from translate_utils.presentation.cli.args import check_translation_progress_parse_args
 from translate_utils.presentation.visualize.markdown import ProgressMarkdownReport
 from translate_utils.presentation.visualize.mixins import ProgressReportData
@@ -14,16 +14,18 @@ from translate_utils.presentation.visualize.terminal import ProgressTerminalRepo
 from translate_utils.services.orchestrators import BatchProgressOrchestrator
 from translate_utils.services.progress_service import ProgressService
 
-LOGGER = setup_logging("TranslationProgress")
+LOGGER = get_logger("TranslationProgress")
 
 
 def check_translation_progress() -> None:
-    LOGGER.info("Checking translation status...")
     args = check_translation_progress_parse_args()
+    config = initialize_config()
+    setup_logging("TranslationProgress", config.paths.common_logs_dir)
+    LOGGER.info("Checking translation status...")
 
     if not args.filepaths:
-        paths_to_check = [DEFAULT_DIR_FOR_TRANSLATION]
-        LOGGER.info(f"No path provided. Defaulting to: {DEFAULT_DIR_FOR_TRANSLATION}")
+        paths_to_check = [config.settings.dir_for_translation]
+        LOGGER.info(f"No path provided. Defaulting to: {config.settings.dir_for_translation}")
     else:
         paths_to_check = [Path(p) for p in args.filepaths]
 

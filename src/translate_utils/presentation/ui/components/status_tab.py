@@ -2,15 +2,17 @@ import concurrent.futures
 from pathlib import Path
 from typing import Any
 
+from rich.console import ConsoleRenderable, RichCast
 from textual import work
 from textual.app import ComposeResult
 from textual.containers import VerticalScroll
+from textual.visual import SupportsVisual, Visual
 from textual.widgets import Button, Label, Static
 
 from translate_utils.infrastructure.caching.cache import CachedFileReader
 from translate_utils.infrastructure.composition.factories import create_default_progress_counter
 from translate_utils.infrastructure.filesystem.io import gather_extension_files, read_renpy_file
-from translate_utils.infrastructure.filesystem.path import DEFAULT_DIR_FOR_TRANSLATION
+from translate_utils.infrastructure.filesystem.path import AppConfig
 from translate_utils.presentation.visualize.mixins import ProgressReportData
 from translate_utils.presentation.visualize.terminal import ProgressTerminalReport
 from translate_utils.services.orchestrators import BatchProgressOrchestrator
@@ -18,6 +20,31 @@ from translate_utils.services.progress_service import ProgressService
 
 
 class StatusTab(Static):
+    def __init__(
+        self,
+        config: AppConfig,
+        content: ConsoleRenderable | RichCast | str | SupportsVisual | Visual = "",
+        *,
+        expand: bool = False,
+        shrink: bool = False,
+        markup: bool = True,
+        name: str | None = None,
+        id: str | None = None,
+        classes: str | None = None,
+        disabled: bool = False,
+    ) -> None:
+        super().__init__(
+            content,
+            expand=expand,
+            shrink=shrink,
+            markup=markup,
+            name=name,
+            id=id,
+            classes=classes,
+            disabled=disabled,
+        )
+        self._config = config
+
     def compose(self) -> ComposeResult:
         yield Label("Translation status", id="status_title")
 
@@ -61,7 +88,7 @@ class StatusTab(Static):
             progress_service, lambda: concurrent.futures.ThreadPoolExecutor()
         )
 
-        current_mtime = self._get_latest_mtime(DEFAULT_DIR_FOR_TRANSLATION)
+        current_mtime = self._get_latest_mtime(self._config.settings.dir_for_translation)
         if not manual and current_mtime <= self._last_mtime:
             return
 
@@ -72,7 +99,7 @@ class StatusTab(Static):
 
         self.app.call_from_thread(update_ui, "Loading data... Please wait.")
 
-        paths_to_check = [DEFAULT_DIR_FOR_TRANSLATION]
+        paths_to_check = [self._config.settings.dir_for_translation]
         rpy_files = gather_extension_files(paths_to_check, "rpy")
         translation_stats = orchestrator.execute(rpy_files)
 

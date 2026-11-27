@@ -5,6 +5,7 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Header, TabbedContent
 
+from translate_utils.infrastructure.filesystem.path import AppConfig
 from translate_utils.infrastructure.filesystem.saver import save_active_tab
 from translate_utils.presentation.ui.base_layout import ActionPanel
 
@@ -44,10 +45,20 @@ TAB_ID_FALLBACK: NotificationConfig = {
 
 
 class MainScreen(Screen[None]):
+    def __init__(
+        self,
+        config: AppConfig,
+        name: str | None = None,
+        id: str | None = None,
+        classes: str | None = None,
+    ) -> None:
+        super().__init__(name, id, classes)
+        self._config = config
+
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(id="main_container"):
-            yield ActionPanel()
+            yield ActionPanel(self._config)
         yield Footer()
 
     def on_tabbed_content_tab_activated(self, event: TabbedContent.TabActivated) -> None:
@@ -56,7 +67,7 @@ class MainScreen(Screen[None]):
         if not tab_id:
             tab_id = "unknown_tab"
 
-        save_active_tab(tab_id)
+        save_active_tab(tab_id, self._config)
 
         notification = TAB_NOTIFICATIONS.get(tab_id, TAB_ID_FALLBACK)
 
